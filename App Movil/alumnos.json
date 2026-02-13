@@ -1,0 +1,25 @@
+[
+    {
+        "uid_nfc": "04:A2:3F:89",
+        "nombre": "Ana García",
+        "curso": "2º DAM",
+        "foto": "ana_garcia.jpg",
+        "autorizado_salir": true,
+        "historial_asistencia": [
+            {
+                "fecha": "2026-02-16",
+                "hora": "08:00:05",
+                "tipo": "ENTRADA",
+                "registrado_por_profe": 3
+            }
+        ]
+    },
+    {
+        "uid_nfc": "D3:45:1A:02",
+        "nombre": "Carlos Pérez",
+        "curso": "1º DAW",
+        "foto": "carlos_perez.jpg",
+        "autorizado_salir": false,
+        "historial_asistencia": []
+    }
+]
