@@ -37,7 +37,6 @@
     </aside>
 
     <main class="col-md-9 col-lg-10 p-4">
-
       <div id="vista-dashboard">
         <h1 class="mb-4">Control de Asistencia</h1>
 
@@ -77,25 +76,34 @@
           </div>
         </div>
       </div>
-
-
       <div id="vista-alumnos" class="d-none">
+
         <h2 class="mb-3">Listado de Alumnos</h2>
-        <div class="card">
+
+        <div class="card mb-3">
           <div class="card-body">
             <table class="table table-striped">
               <thead class="table-dark">
                 <tr>
                   <th>Nombre</th>
-                  <th>Grupo</th>
-                  <th>NFC</th>
-                  <th>Recreo</th>
+                  <th>Salida recreo</th>
+                  <th>Acción rápida</th>
                 </tr>
               </thead>
               <tbody id="tabla-alumnos"></tbody>
             </table>
           </div>
         </div>
+
+        <div id="ficha-alumno" class="card d-none">
+          <div class="card-body">
+            <h4 id="ficha-nombre"></h4>
+            <p><strong>Grupo:</strong> <span id="ficha-grupo"></span></p>
+            <p><strong>NFC:</strong> <span id="ficha-nfc"></span></p>
+            <p><strong>Permiso recreo:</strong> <span id="ficha-recreo"></span></p>
+          </div>
+        </div>
+
       </div>
 
       <div id="vista-profesores" class="d-none">
@@ -115,7 +123,6 @@
           </div>
         </div>
       </div>
-
 
       <div id="vista-nfc" class="d-none">
 
