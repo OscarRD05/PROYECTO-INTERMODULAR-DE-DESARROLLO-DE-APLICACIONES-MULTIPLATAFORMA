@@ -1,0 +1,30 @@
+[
+    {
+        "id_profe": 1,
+        "usuario": "agonzalez",
+        "pass": "profe123",
+        "nombre": "Ayoze González",
+        "rol": "admin"
+    },
+    {
+        "id_profe": 2,
+        "usuario": "jgonzalez",
+        "pass": "1234",
+        "nombre": "Joel González",
+        "rol": "profesor"
+    },
+    {
+        "id_profe": 3,
+        "usuario": "manuel",
+        "pass": "manudam",
+        "nombre": "Manuel Delgado",
+        "rol": "guardia"
+    },
+    {
+        "id_profe": 4,
+        "usuario": "oscar",
+        "pass": "oscar123",
+        "nombre": "Oscar Rodríguez",
+        "rol": "profesor"
+    }
+]
