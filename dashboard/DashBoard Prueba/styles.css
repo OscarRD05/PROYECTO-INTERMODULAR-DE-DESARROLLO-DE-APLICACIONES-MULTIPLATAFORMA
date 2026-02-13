@@ -1,0 +1,62 @@
+/* ===== SWITCH MORADO CON TEXTO CENTRADO ===== */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 70px;
+  height: 32px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  background-color: #bdbdbd;
+  border-radius: 32px;
+  transition: 0.3s;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 12px;
+  font-weight: bold;
+  color: white;
+}
+
+/* TEXTO */
+.slider::after {
+  content: "OFF";
+  z-index: 1;
+}
+
+/* CÍRCULO */
+.slider::before {
+  content: "";
+  position: absolute;
+  height: 24px;
+  width: 24px;
+  left: 4px;
+  background-color: white;
+  border-radius: 50%;
+  transition: 0.3s;
+  z-index: 2;
+}
+
+/* ===== ESTADO ON ===== */
+input:checked + .slider {
+  background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+}
+
+input:checked + .slider::after {
+  content: "ON";
+}
+
+input:checked + .slider::before {
+  transform: translateX(38px);
+}
