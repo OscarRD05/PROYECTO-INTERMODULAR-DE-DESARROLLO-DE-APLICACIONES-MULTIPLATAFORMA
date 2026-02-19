@@ -10,7 +10,8 @@ services:
       POSTGRES_PASSWORD: odoo
     volumes:
       - db_data:/var/lib/postgresql/data
-
+    ports:
+      - "5432:5432"
   odoo:
     image: odoo:18
     container_name: odoo18-web
