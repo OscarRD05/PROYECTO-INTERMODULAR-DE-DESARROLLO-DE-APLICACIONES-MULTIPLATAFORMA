@@ -1,23 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
-
-    <record id="action_nfc_alumnos" model="ir.actions.act_window">
-        <field name="name">Alumnos</field>
-        <field name="res_model">nfc.alumno</field>
-        <field name="view_mode">list,form</field>
-    </record>
-
-    <menuitem id="menu_nfc_root"
-              name="NFC"
-              sequence="10"
-              application="True"/>
-
-    <menuitem id="menu_nfc_alumnos"
-              name="Alumnos"
-              parent="menu_nfc_root"
-              action="action_nfc_alumnos"
-              sequence="10"/>
-
     <record id="view_nfc_alumno_list" model="ir.ui.view">
         <field name="name">nfc.alumno.list</field>
         <field name="model">nfc.alumno</field>
@@ -48,4 +30,12 @@
         </field>
     </record>
 
+    <record id="action_nfc_alumnos" model="ir.actions.act_window">
+        <field name="name">Alumnos</field>
+        <field name="res_model">nfc.alumno</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_nfc_root" name="NFC" sequence="10" application="True"/>
+    <menuitem id="menu_nfc_alumnos" name="Alumnos" parent="menu_nfc_root" action="action_nfc_alumnos" sequence="10"/>
 </odoo>
