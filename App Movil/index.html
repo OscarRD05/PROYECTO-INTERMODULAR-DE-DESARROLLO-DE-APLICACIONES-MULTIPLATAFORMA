@@ -108,6 +108,17 @@
 
         button.verde { background-color: #28a745; margin-bottom: 15px; }
         button.secondary { background-color: #17a2b8; width: auto; padding: 0 20px; margin: 0; }
+        
+        button.btn-lista {
+            background-color: #f8f9fa;
+            color: #333;
+            border: 1px solid #ddd;
+            margin-bottom: 8px;
+            padding: 12px;
+            text-align: left;
+            display: block;
+            height: auto;
+        }
 
         .card-alumno {
             background: white;
@@ -168,12 +179,56 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.05);
             width: 100%;
         }
+
+        .install-banner {
+            display: none;
+            background-color: #007bff;
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            box-shadow: 0 4px 10px rgba(0,123,255,0.3);
+        }
+        
+        .install-banner button {
+            background-color: white;
+            color: #007bff;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-top: 10px;
+            width: 100%;
+            box-shadow: none;
+        }
+        
+        .ios-banner {
+            display: none;
+            background-color: #343a40;
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
     </style>
 </head>
 <body>
 
     <div id="view-login" class="pantalla activa" style="justify-content: center; align-items: center;">
         <div class="login-box">
+            
+            <div id="install-banner" class="install-banner">
+                📲 Instala la App para entrar directo
+                <button id="btn-install">Instalar App Ahora</button>
+            </div>
+            
+            <div id="ios-banner" class="ios-banner">
+                🍏 <b>¿Estás en iPhone?</b><br>
+                Pulsa "Compartir" (abajo) y luego <b>"Añadir a la pantalla de inicio"</b> para instalar la App.
+            </div>
+
             <h1 style="margin-bottom: 5px;">🔐 Acceso</h1>
             <p style="color: gray; margin-bottom: 25px;">IES San Juan de la Rambla</p>
             
@@ -200,6 +255,11 @@
                 <p id="curso-alumno" style="color: gray;">Curso</p>
                 <div id="status-text" class="status-msg"></div>
                 <p id="dato-extra" style="font-size: 0.7em; color: #ccc; margin-top: 5px;"></p>
+            </div>
+
+            <div id="lista-desempate" style="display: none; width: 100%; max-height: 250px; overflow-y: auto; padding: 10px; background: white; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                <h4 style="color: #666; margin: 0 0 15px 0;">Selecciona al alumno:</h4>
+                <div id="contenedor-botones-lista"></div>
             </div>
         </div>
 
@@ -268,6 +328,7 @@
         document.getElementById('btn-nfc').addEventListener("click", async () => {
             const log = document.getElementById("log");
             document.getElementById('resultado-container').style.display = 'none';
+            document.getElementById('lista-desempate').style.display = 'none';
             log.innerText = "📲 Acerca el móvil a la tarjeta...";
 
             try {
@@ -288,6 +349,7 @@
             const texto = document.getElementById('manual-input').value.trim();
             if(texto.length > 0) {
                 document.getElementById('resultado-container').style.display = 'none';
+                document.getElementById('lista-desempate').style.display = 'none';
                 document.getElementById("log").innerText = "Buscando...";
                 procesarFichaje(texto, "manual");
             } else {
@@ -298,9 +360,9 @@
         async function procesarFichaje(dato, tipo) {
             const idProfe = localStorage.getItem('id_profe');
             const log = document.getElementById("log");
-            const datoLimpio = dato.toLowerCase();
+            const datoLimpio = String(dato).toLowerCase();
             
-            if (dato === "04:A2:3F:89" || datoLimpio.includes("ana") || datoLimpio === "a2026") {
+            if (dato === "04:A2:3F:89" || datoLimpio === "ana" || datoLimpio === "a2026") {
                 mostrarResultado({
                     encontrado: true,
                     nombre: "Ana García",
@@ -313,7 +375,7 @@
                 return;
             }
 
-            if (datoLimpio.includes("carlos") || datoLimpio === "b2026") {
+            if (datoLimpio === "carlos" || datoLimpio === "b2026") {
                 mostrarResultado({
                     encontrado: true,
                     nombre: "Carlos Pérez",
@@ -333,9 +395,37 @@
                     body: JSON.stringify({ dato: dato, tipo_entrada: tipo, id_profe: idProfe })
                 });
 
-                const alumno = await response.json();
-                mostrarResultado(alumno);
-                log.innerText = "";
+                const respuesta = await response.json();
+
+                if (respuesta.encontrado) {
+                    if (respuesta.multiple) {
+                        log.innerText = "⚠️ Varios resultados";
+                        document.getElementById('lista-desempate').style.display = "block";
+                        const contenedorBtn = document.getElementById('contenedor-botones-lista');
+                        contenedorBtn.innerHTML = ""; 
+
+                        respuesta.lista.forEach(alumno => {
+                            const btn = document.createElement("button");
+                            btn.className = "accion btn-lista";
+                            btn.innerHTML = `<b>${alumno.nombre}</b> <br> <span style='font-size:0.8em; color:gray'>${alumno.curso}</span>`;
+                            
+                            btn.onclick = () => {
+                                document.getElementById('lista-desempate').style.display = "none";
+                                log.innerText = "Cargando...";
+                                procesarFichaje(alumno.id, "id_odoo"); 
+                            };
+                            
+                            contenedorBtn.appendChild(btn);
+                        });
+                    } else {
+                        mostrarResultado(respuesta);
+                        log.innerText = "";
+                    }
+                } else {
+                    alert("Alumno no encontrado");
+                    document.body.style.backgroundColor = "#fff3cd"; 
+                    log.innerText = "";
+                }
 
             } catch (error) {
                 log.innerText = "❌ Servidor no responde (Prueba 'Ana' o 'Carlos')";
@@ -365,9 +455,6 @@
                     statusText.style.color = "#721c24";
                     statusText.style.backgroundColor = "#f5c6cb";
                 }
-            } else {
-                alert("Alumno no encontrado");
-                document.body.style.backgroundColor = "#fff3cd"; 
             }
         }
 
@@ -383,6 +470,37 @@
             viewScanner.classList.add('activa');
             document.getElementById('welcome-msg').innerText = "Hola, " + nombre;
             document.body.style.backgroundColor = "#f4f4f9";
+        }
+
+        let promptInstalacion;
+        const installBanner = document.getElementById('install-banner');
+        const btnInstall = document.getElementById('btn-install');
+        const iosBanner = document.getElementById('ios-banner');
+
+        const esIos = /ipad|iphone|ipod/.test(navigator.userAgent.toLowerCase());
+        const estaInstalada = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+
+        if (!estaInstalada) {
+            if (esIos) {
+                iosBanner.style.display = 'block';
+            } else {
+                window.addEventListener('beforeinstallprompt', (e) => {
+                    e.preventDefault();
+                    promptInstalacion = e;
+                    installBanner.style.display = 'block';
+                });
+
+                btnInstall.addEventListener('click', async () => {
+                    if (promptInstalacion) {
+                        promptInstalacion.prompt();
+                        const resultado = await promptInstalacion.userChoice;
+                        if (resultado.outcome === 'accepted') {
+                            installBanner.style.display = 'none';
+                        }
+                        promptInstalacion = null;
+                    }
+                });
+            }
         }
     </script>
 </body>
