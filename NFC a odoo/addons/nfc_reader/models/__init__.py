@@ -1,2 +1,1 @@
-from . import nfc_log
-from . import alumno
+from . import models
