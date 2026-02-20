@@ -9,7 +9,8 @@ class NFCController(http.Controller):
             return {"status": "error", "message": "NO UID"}
 
         request.env['nfc.log'].sudo().create({
-            'uid': uid
+            'uid_nfc': uid, 
+            'alumno_id': request.env['nfc.alumno'].sudo().search([('uid_nfc', '=', uid)], limit=1).id
         })
 
         return {"status": "ok", "uid": uid}
