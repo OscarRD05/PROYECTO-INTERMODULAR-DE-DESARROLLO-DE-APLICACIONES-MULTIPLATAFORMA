@@ -5,7 +5,7 @@ print("Pasa la tarjeta NFC...\n")
 
 buffer = ""
 
-ODOO_URL = "http://localhost:8069/nfc/read"
+ODOO_URL = "http://raspberry.local:8069/nfc/read"
 
 
 def enviar_uid(uid):

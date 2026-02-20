@@ -1,1 +1,1 @@
-from . import nfc_log
+from . import models

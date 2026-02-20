@@ -1,15 +1,11 @@
-const kpis = {
-    salidas: 142,
-    incidencias: 3,
-    activos: 98
-};
+const kpis = { salidas: 142, incidencias: 3, activos: 98 };
 
 const grafica = [
-    { dia: "L", valor: 25 },
-    { dia: "M", valor: 18 },
-    { dia: "X", valor: 30 },
-    { dia: "J", valor: 20 },
-    { dia: "V", valor: 10 }
+  { dia: "L", valor: 25 },
+  { dia: "M", valor: 18 },
+  { dia: "X", valor: 30 },
+  { dia: "J", valor: 20 },
+  { dia: "V", valor: 10 }
 ];
 
 const usuarios = [
@@ -41,166 +37,166 @@ const usuarios = [
 ];
 
 
-const kpiSalidas = document.getElementById("kpi-salidas");
-const kpiIncidencias = document.getElementById("kpi-incidencias");
-const kpiActivos = document.getElementById("kpi-activos");
+document.getElementById("kpi-salidas").innerText = kpis.salidas;
+document.getElementById("kpi-incidencias").innerText = kpis.incidencias;
+document.getElementById("kpi-activos").innerText = kpis.activos + "%";
 
-function cargarKPIs() {
-    kpiSalidas.innerText = kpis.salidas;
-    kpiIncidencias.innerText = kpis.incidencias;
-    kpiActivos.innerText = kpis.activos + "%";
-}
-
-let chart = null;
-
-function renderGrafico() {
-    const ctx = document.getElementById("grafico");
-
-    if (chart) chart.destroy();
-
-    chart = new Chart(ctx, {
-        type: "bar",
-        data: {
-            labels: grafica.map(g => g.dia),
-            datasets: [{
-                label: "Salidas",
-                data: grafica.map(g => g.valor),
-                backgroundColor: "rgba(54,162,235,0.5)"
-            }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-    });
-}
-
-
-const vistaDashboard = document.getElementById("vista-dashboard");
-const vistaAlumnos = document.getElementById("vista-alumnos");
-const vistaProfesores = document.getElementById("vista-profesores");
+new Chart(document.getElementById("grafico"), {
+  type: "bar",
+  data: {
+    labels: grafica.map(g => g.dia),
+    datasets: [{ data: grafica.map(g => g.valor) }]
+  }
+});
 
 const btnDashboard = document.getElementById("btn-dashboard");
 const btnAlumnos = document.getElementById("btn-alumnos");
 const btnProfesores = document.getElementById("btn-profesores");
+const btnNFC = document.getElementById("btn-nfc");
+
+const vistaDashboard = document.getElementById("vista-dashboard");
+const vistaAlumnos = document.getElementById("vista-alumnos");
+const vistaProfesores = document.getElementById("vista-profesores");
+const vistaNFC = document.getElementById("vista-nfc");
 
 const tablaAlumnos = document.getElementById("tabla-alumnos");
 const tablaProfesores = document.getElementById("tabla-profesores");
+const tablaNFC = document.getElementById("tabla-nfc");
 
-
-function ocultarTodo() {
-    vistaDashboard.classList.add("d-none");
-    vistaAlumnos.classList.add("d-none");
-    vistaProfesores.classList.add("d-none");
-    vistaNFC.classList.add("d-none");
-}
-
-btnDashboard.addEventListener("click", (e) => {
-    e.preventDefault();
-    ocultarTodo();
-    vistaDashboard.classList.remove("d-none");
-});
-
-
-btnAlumnos.addEventListener("click", (e) => {
-    e.preventDefault();
-    ocultarTodo();
-    vistaAlumnos.classList.remove("d-none");
-
-    const soloAlumnos = usuarios.filter(u => u.rol === "Estudiante");
-
-    tablaAlumnos.innerHTML = "";
-    soloAlumnos.forEach(a => {
-        tablaAlumnos.innerHTML += `
-        <tr>
-            <td>${a.nombre}</td>
-            <td>${a.grupo}</td>
-            <td>${a.nfc ?? "Sin vincular"}</td>
-            <td>${a.recreo ? "Sí" : "No"}</td>
-        </tr>`;
-    });
-});
-
-btnProfesores.addEventListener("click", (e) => {
-    e.preventDefault();
-    ocultarTodo();
-    vistaProfesores.classList.remove("d-none");
-
-    const soloProfes = usuarios.filter(u => u.rol === "Profesor");
-
-    tablaProfesores.innerHTML = "";
-    soloProfes.forEach(p => {
-        tablaProfesores.innerHTML += `
-        <tr>
-            <td>${p.nombre}</td>
-            <td>${p.grupo}</td>
-            <td>${p.nfc ?? "Sin vincular"}</td>
-        </tr>`;
-    });
-});
-
-
-cargarKPIs();
-renderGrafico();
-
-
-/* ================= NFC ================= */
-
-const vistaNFC = document.getElementById("vista-nfc");
-const btnNFC = document.getElementById("btn-nfc");
+const fichaAlumno = document.getElementById("ficha-alumno");
+const fichaNombre = document.getElementById("ficha-nombre");
+const fichaGrupo = document.getElementById("ficha-grupo");
+const fichaNFC = document.getElementById("ficha-nfc");
+const fichaRecreo = document.getElementById("ficha-recreo");
 
 const selectUsuario = document.getElementById("select-usuario");
 const inputNFC = document.getElementById("input-nfc");
 const btnVincular = document.getElementById("btn-vincular");
-const tablaNFC = document.getElementById("tabla-nfc");
 
+let alumnoActual = null;
 
-function cargarSelectUsuarios() {
-    selectUsuario.innerHTML = "";
-
-    usuarios.forEach((u, i) => {
-        selectUsuario.innerHTML += `
-            <option value="${i}">
-                ${u.nombre} (${u.rol})
-            </option>
-        `;
-    });
+function ocultarTodo() {
+  vistaDashboard.classList.add("d-none");
+  vistaAlumnos.classList.add("d-none");
+  vistaProfesores.classList.add("d-none");
+  vistaNFC.classList.add("d-none");
 }
+
+btnDashboard.onclick = e => {
+  e.preventDefault();
+  ocultarTodo();
+  vistaDashboard.classList.remove("d-none");
+};
+
+btnAlumnos.onclick = e => {
+  e.preventDefault();
+  ocultarTodo();
+  vistaAlumnos.classList.remove("d-none");
+  activarMenu(btnAlumnos);
+
+  const alumnos = usuarios.filter(u => u.rol === "Estudiante");
+  fichaAlumno.classList.add("d-none");
+
+  tablaAlumnos.innerHTML = alumnos.map((a, i) => `
+    <tr>
+      <td>
+        <button class="btn btn-link p-0" onclick="verAlumno(${i})">
+          ${a.nombre}
+        </button>
+      </td>
+      <td>${a.recreo ? "Sí" : "No"}</td>
+      <td>
+        <label class="switch">
+          <input type="checkbox" ${a.recreo ? "checked" : ""} onchange="toggleRecreo(${i})">
+          <span class="slider"></span>
+        </label>
+      </td>
+    </tr>
+  `).join("");
+};
+
+
+window.verAlumno = i => {
+  const a = usuarios.filter(u => u.rol === "Estudiante")[i];
+  alumnoActual = a;
+
+  fichaNombre.innerText = a.nombre;
+  fichaGrupo.innerText = a.grupo;
+  fichaNFC.innerText = a.nfc ?? "-";
+  fichaRecreo.innerText = a.recreo ? "Sí" : "No";
+
+  fichaAlumno.classList.remove("d-none");
+  fichaAlumno.scrollIntoView({ behavior: "smooth" });
+};
+
+window.toggleRecreo = i => {
+  const a = usuarios.filter(u => u.rol === "Estudiante")[i];
+  a.recreo = !a.recreo;
+  btnAlumnos.click();
+};
+
+
+btnProfesores.onclick = e => {
+  e.preventDefault();
+  ocultarTodo();
+  vistaProfesores.classList.remove("d-none");
+  activarMenu(btnProfesores);
+
+  tablaProfesores.innerHTML = usuarios
+    .filter(u => u.rol === "Profesor")
+    .map(p => `<tr><td>${p.nombre}</td><td>${p.grupo}</td><td>${p.nfc ?? "-"}</td></tr>`)
+    .join("");
+};
+
+
+btnNFC.onclick = e => {
+  e.preventDefault();
+  ocultarTodo();
+  vistaNFC.classList.remove("d-none");
+  activarMenu(btnNFC);
+
+  selectUsuario.innerHTML = usuarios
+    .map((u, i) => `<option value="${i}">${u.nombre} (${u.rol})</option>`)
+    .join("");
+
+  renderTablaNFC();
+};
 
 
 function renderTablaNFC() {
-    tablaNFC.innerHTML = "";
+  tablaNFC.innerHTML = usuarios
+    .map(u => `<tr><td>${u.nombre}</td><td>${u.rol}</td><td>${u.nfc ?? "-"}</td></tr>`)
+    .join("");
+}
 
-    usuarios.forEach(u => {
-        tablaNFC.innerHTML += `
-        <tr>
-            <td>${u.nombre}</td>
-            <td>${u.rol}</td>
-            <td>${u.nfc ?? "Sin vincular"}</td>
-        </tr>`;
-    });
+function activarMenu(botonActivo) {
+  const botones = [btnDashboard, btnAlumnos, btnProfesores, btnNFC];
+
+  botones.forEach(btn => {
+    btn.classList.remove("active", "bg-primary-subtle", "text-primary", "fw-semibold");
+    btn.classList.add("text-dark");
+  });
+
+  botonActivo.classList.add("active", "bg-primary-subtle", "text-primary", "fw-semibold");
+  botonActivo.classList.remove("text-dark");
 }
 
 
-btnNFC.addEventListener("click", (e) => {
-    e.preventDefault();
-    ocultarTodo();
-    vistaNFC.classList.remove("d-none");
+btnVincular.onclick = () => {
+  const i = selectUsuario.value;
+  const uid = inputNFC.value.trim();
 
-    cargarSelectUsuarios();
-    renderTablaNFC();
-});
+  if (!uid) return alert("Introduce UID");
 
+  usuarios[i].nfc = uid;
+  inputNFC.value = "";
+  renderTablaNFC();
+};
 
-btnVincular.addEventListener("click", () => {
-    const index = selectUsuario.value;
-    const uid = inputNFC.value.trim();
+btnDashboard.onclick = e => {
+  e.preventDefault();
+  ocultarTodo();
+  vistaDashboard.classList.remove("d-none");
+  activarMenu(btnDashboard);
+};
 
-    if (!uid) {
-        alert("Introduce un UID de tarjeta");
-        return;
-    }
-
-    usuarios[index].nfc = uid;
-
-    inputNFC.value = "";
-
-    renderTablaNFC();
-});
