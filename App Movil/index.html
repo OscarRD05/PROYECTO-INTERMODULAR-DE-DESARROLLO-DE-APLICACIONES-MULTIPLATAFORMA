@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Control Acceso IES</title>
     <link rel="manifest" href="manifest.json">
-    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon" href="icono_grande.png">
     <style>
         * {
             box-sizing: border-box;
@@ -14,24 +17,28 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             text-align: center;
-            margin: 0;
+            margin: 0 auto;
             padding: 20px;
             background-color: #f4f4f9;
             height: 100vh;
-            height: 100dvh; 
+            height: 100dvh;
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            max-width: 450px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
         }
 
-        .pantalla { 
-            display: none; 
-            width: 100%; 
+        .pantalla {
+            display: none;
+            width: 100%;
             height: 100%;
-            flex-direction: column; 
+            flex-direction: column;
         }
-        
-        .activa { display: flex; }
+
+        .activa {
+            display: flex;
+        }
 
         .header-top {
             display: flex;
@@ -60,10 +67,10 @@
         }
 
         .zona-superior {
-            flex-grow: 1; 
+            flex-grow: 1;
             display: flex;
             flex-direction: column;
-            justify-content: center; 
+            justify-content: center;
             align-items: center;
             overflow: hidden;
         }
@@ -72,8 +79,8 @@
             background: white;
             padding: 15px;
             border-radius: 20px 20px 0 0;
-            box-shadow: 0 -5px 15px rgba(0,0,0,0.05);
-            margin: 0 -20px -20px -20px; 
+            box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.05);
+            margin: 0 -20px -20px -20px;
             flex-shrink: 0;
             padding-bottom: 30px;
         }
@@ -99,16 +106,25 @@
             border: none;
             border-radius: 10px;
             cursor: pointer;
-            box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
             display: flex;
             justify-content: center;
             align-items: center;
             gap: 10px;
         }
 
-        button.verde { background-color: #28a745; margin-bottom: 15px; }
-        button.secondary { background-color: #17a2b8; width: auto; padding: 0 20px; margin: 0; }
-        
+        button.verde {
+            background-color: #28a745;
+            margin-bottom: 15px;
+        }
+
+        button.secondary {
+            background-color: #17a2b8;
+            width: auto;
+            padding: 0 20px;
+            margin: 0;
+        }
+
         button.btn-lista {
             background-color: #f8f9fa;
             color: #333;
@@ -125,8 +141,8 @@
             width: 100%;
             padding: 15px;
             border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            display: none; 
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            display: none;
             margin-bottom: 10px;
         }
 
@@ -136,12 +152,18 @@
             object-fit: cover;
             border-radius: 50%;
             border: 4px solid #fff;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             background-color: #eee;
         }
 
-        h2 { margin: 5px 0; font-size: 1.2rem; }
-        p { margin: 2px 0; }
+        h2 {
+            margin: 5px 0;
+            font-size: 1.2rem;
+        }
+
+        p {
+            margin: 2px 0;
+        }
 
         .status-msg {
             font-weight: bold;
@@ -150,13 +172,14 @@
             padding: 10px;
             border-radius: 8px;
         }
-        
+
         .separador {
             margin: 10px 0 15px 0;
             border-top: 1px solid #eee;
             position: relative;
             text-align: center;
         }
+
         .separador span {
             background: white;
             padding: 0 10px;
@@ -168,16 +191,36 @@
             font-weight: bold;
         }
 
-        #error-msg { color: #dc3545; font-weight: bold; margin-top: 10px; font-size: 0.9rem; }
-        .fade-in { animation: fadeIn 0.4s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        #error-msg {
+            color: #dc3545;
+            font-weight: bold;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
         .login-box {
             background: white;
             padding: 30px;
             border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
             width: 100%;
+            max-width: 400px;
         }
 
         .install-banner {
@@ -188,9 +231,9 @@
             border-radius: 12px;
             margin-bottom: 20px;
             font-size: 14px;
-            box-shadow: 0 4px 10px rgba(0,123,255,0.3);
+            box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
         }
-        
+
         .install-banner button {
             background-color: white;
             color: #007bff;
@@ -202,7 +245,7 @@
             width: 100%;
             box-shadow: none;
         }
-        
+
         .ios-banner {
             display: none;
             background-color: #343a40;
@@ -214,16 +257,17 @@
         }
     </style>
 </head>
+
 <body>
 
     <div id="view-login" class="pantalla activa" style="justify-content: center; align-items: center;">
         <div class="login-box">
-            
+
             <div id="install-banner" class="install-banner">
                 📲 Instala la App para entrar directo
                 <button id="btn-install">Instalar App Ahora</button>
             </div>
-            
+
             <div id="ios-banner" class="ios-banner">
                 🍏 <b>¿Estás en iPhone?</b><br>
                 Pulsa "Compartir" (abajo) y luego <b>"Añadir a la pantalla de inicio"</b> para instalar la App.
@@ -231,7 +275,7 @@
 
             <h1 style="margin-bottom: 5px;">🔐 Acceso</h1>
             <p style="color: gray; margin-bottom: 25px;">IES San Juan de la Rambla</p>
-            
+
             <input type="text" id="user" placeholder="Usuario">
             <input type="password" id="pass" placeholder="Contraseña">
             <button id="btn-login" class="accion" style="margin-top: 10px;">ENTRAR</button>
@@ -240,7 +284,7 @@
     </div>
 
     <div id="view-scanner" class="pantalla">
-        
+
         <div class="header-top">
             <h3 id="welcome-msg">Hola, ...</h3>
             <button id="btn-logout" class="btn-salir-mini">Salir 🔒</button>
@@ -257,7 +301,8 @@
                 <p id="dato-extra" style="font-size: 0.7em; color: #ccc; margin-top: 5px;"></p>
             </div>
 
-            <div id="lista-desempate" style="display: none; width: 100%; max-height: 250px; overflow-y: auto; padding: 10px; background: white; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+            <div id="lista-desempate"
+                style="display: none; width: 100%; max-height: 250px; overflow-y: auto; padding: 10px; background: white; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
                 <h4 style="color: #666; margin: 0 0 15px 0;">Selecciona al alumno:</h4>
                 <div id="contenedor-botones-lista"></div>
             </div>
@@ -271,7 +316,8 @@
             <div class="separador"><span>o búsqueda manual</span></div>
 
             <div style="display: flex; gap: 8px;">
-                <input type="text" id="manual-input" placeholder="DNI / CIAL / Nombre" style="margin:0; text-align: left; flex-grow: 1;">
+                <input type="text" id="manual-input" placeholder="Buscar por Nombre"
+                    style="margin:0; text-align: left; flex-grow: 1;">
                 <button id="btn-manual" class="accion secondary">🔍</button>
             </div>
         </div>
@@ -287,7 +333,7 @@
         const userInput = document.getElementById('user');
         const passInput = document.getElementById('pass');
         const errorMsg = document.getElementById('error-msg');
-        const API_URL = '/api'; 
+        const API_URL = '/api';
 
         const idProfeGuardado = localStorage.getItem('id_profe');
         if (idProfeGuardado) {
@@ -295,33 +341,27 @@
         }
 
         document.getElementById('btn-login').addEventListener('click', async () => {
-            const usuario = userInput.value;
+            const usuario = userInput.value.trim();
             const password = passInput.value;
             errorMsg.innerText = "Verificando...";
 
-            if (usuario === "agonzalez" && password === "profe123") {
-                localStorage.setItem('id_profe', 1);
-                localStorage.setItem('nombre_profe', "Ayoze González");
-                mostrarPantallaEscaner("Ayoze González");
-                return; 
-            }
-
             try {
-                const response = await fetch(`${API_URL}/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ usuario: usuario, pass: password })
-                });
-                const data = await response.json();
-                if (data.exito) {
-                    localStorage.setItem('id_profe', data.id_profe);
-                    localStorage.setItem('nombre_profe', data.nombre);
-                    mostrarPantallaEscaner(data.nombre);
+                const response = await fetch('profesores.json');
+                const profesores = await response.json();
+
+                const profe = profesores.find(p => p.usuario === usuario && p.pass === password);
+
+                if (profe) {
+                    localStorage.setItem('id_profe', profe.id_profe);
+                    localStorage.setItem('nombre_profe', profe.nombre);
+                    mostrarPantallaEscaner(profe.nombre);
+                    errorMsg.innerText = "";
                 } else {
                     errorMsg.innerText = "❌ Datos incorrectos";
                 }
             } catch (error) {
-                errorMsg.innerText = "⚠️ Error conexión (Usa 'agonzalez' para probar)";
+                errorMsg.innerText = "⚠️ Error cargando profesores.json";
+                console.error(error);
             }
         });
 
@@ -329,27 +369,29 @@
             const log = document.getElementById("log");
             document.getElementById('resultado-container').style.display = 'none';
             document.getElementById('lista-desempate').style.display = 'none';
+            document.body.style.backgroundColor = "#f4f4f9";
             log.innerText = "📲 Acerca el móvil a la tarjeta...";
 
             try {
                 const ndef = new NDEFReader();
                 await ndef.scan();
-                
+
                 ndef.onreading = event => {
                     const uid = event.serialNumber;
                     log.innerText = "Lectura correcta";
                     procesarFichaje(uid, "nfc");
                 };
             } catch (error) {
-                log.innerText = "❌ Error NFC (Solo Android Chrome)";
+                log.innerText = "❌ Error NFC";
             }
         });
 
         document.getElementById('btn-manual').addEventListener("click", () => {
             const texto = document.getElementById('manual-input').value.trim();
-            if(texto.length > 0) {
+            if (texto.length > 0) {
                 document.getElementById('resultado-container').style.display = 'none';
                 document.getElementById('lista-desempate').style.display = 'none';
+                document.body.style.backgroundColor = "#f4f4f9";
                 document.getElementById("log").innerText = "Buscando...";
                 procesarFichaje(texto, "manual");
             } else {
@@ -358,99 +400,104 @@
         });
 
         async function procesarFichaje(dato, tipo) {
-            const idProfe = localStorage.getItem('id_profe');
             const log = document.getElementById("log");
-            const datoLimpio = String(dato).toLowerCase();
-            
-            if (dato === "04:A2:3F:89" || datoLimpio === "ana" || datoLimpio === "a2026") {
-                mostrarResultado({
-                    encontrado: true,
-                    nombre: "Ana García",
-                    curso: "2º DAM",
-                    foto: "ana_garcia.jpg",
-                    metodo: tipo,
-                    autorizado: true
-                });
-                log.innerText = "";
-                return;
-            }
-
-            if (datoLimpio === "carlos" || datoLimpio === "b2026") {
-                mostrarResultado({
-                    encontrado: true,
-                    nombre: "Carlos Pérez",
-                    curso: "1º DAW",
-                    foto: "carlos.jpg",
-                    metodo: tipo,
-                    autorizado: false
-                });
-                log.innerText = "";
-                return;
-            }
+            const datoLimpio = String(dato).toLowerCase().trim();
 
             try {
-                const response = await fetch(`${API_URL}/fichar`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ dato: dato, tipo_entrada: tipo, id_profe: idProfe })
-                });
+                const response = await fetch('alumnos.json');
+                const alumnos = await response.json();
 
-                const respuesta = await response.json();
+                let matches = [];
 
-                if (respuesta.encontrado) {
-                    if (respuesta.multiple) {
-                        log.innerText = "⚠️ Varios resultados";
-                        document.getElementById('lista-desempate').style.display = "block";
-                        const contenedorBtn = document.getElementById('contenedor-botones-lista');
-                        contenedorBtn.innerHTML = ""; 
+                if (tipo === 'nfc' || tipo === 'id_odoo') {
+                    const exactMatch = alumnos.find(a => a.uid_nfc && a.uid_nfc.toLowerCase() === datoLimpio);
+                    if (exactMatch) matches.push(exactMatch);
+                } else {
+                    matches = alumnos.filter(a => {
+                        const nom = (a.nombre || "").toLowerCase();
+                        return nom.includes(datoLimpio);
+                    });
+                }
 
-                        respuesta.lista.forEach(alumno => {
-                            const btn = document.createElement("button");
-                            btn.className = "accion btn-lista";
-                            btn.innerHTML = `<b>${alumno.nombre}</b> <br> <span style='font-size:0.8em; color:gray'>${alumno.curso}</span>`;
-                            
-                            btn.onclick = () => {
-                                document.getElementById('lista-desempate').style.display = "none";
-                                log.innerText = "Cargando...";
-                                procesarFichaje(alumno.id, "id_odoo"); 
-                            };
-                            
-                            contenedorBtn.appendChild(btn);
-                        });
-                    } else {
-                        mostrarResultado(respuesta);
-                        log.innerText = "";
-                    }
+                if (matches.length === 1) {
+                    const alumno = matches[0];
+                    mostrarResultado({
+                        encontrado: true,
+                        nombre: alumno.nombre || "Sin nombre",
+                        curso: alumno.curso || "Sin curso",
+                        foto: alumno.foto || "default.jpg",
+                        metodo: tipo,
+                        autorizado: alumno.autorizado_salir
+                    });
+                    log.innerText = "";
+                } else if (matches.length > 1) {
+                    log.innerText = "⚠️ Varios resultados";
+                    document.getElementById('lista-desempate').style.display = "block";
+                    const contenedorBtn = document.getElementById('contenedor-botones-lista');
+                    contenedorBtn.innerHTML = "";
+
+                    matches.forEach(alumno => {
+                        const btn = document.createElement("button");
+                        btn.className = "accion btn-lista";
+                        btn.innerHTML = `<b>${alumno.nombre}</b> <br> <span style='font-size:0.8em; color:gray'>${alumno.curso}</span>`;
+
+                        btn.onclick = () => {
+                            document.getElementById('lista-desempate').style.display = "none";
+                            log.innerText = "Cargando...";
+                            procesarFichaje(alumno.uid_nfc, "id_odoo");
+                        };
+
+                        contenedorBtn.appendChild(btn);
+                    });
                 } else {
                     alert("Alumno no encontrado");
-                    document.body.style.backgroundColor = "#fff3cd"; 
+                    document.body.style.backgroundColor = "#fff3cd";
                     log.innerText = "";
                 }
 
             } catch (error) {
-                log.innerText = "❌ Servidor no responde (Prueba 'Ana' o 'Carlos')";
+                console.error(error);
+                log.innerText = "❌ Error cargando alumnos.json";
             }
         }
 
         function mostrarResultado(alumno) {
             const cardContainer = document.getElementById('resultado-container');
-            
+
             if (alumno.encontrado) {
                 cardContainer.style.display = "block";
                 document.getElementById('nombre-alumno').innerText = alumno.nombre;
                 document.getElementById('curso-alumno').innerText = alumno.curso;
                 document.getElementById('dato-extra').innerText = (alumno.metodo === 'nfc' ? 'Vía NFC' : 'Vía Manual');
-                document.getElementById('foto-alumno').src = "fotos/" + alumno.foto;
-                
+
+                const imgFoto = document.getElementById('foto-alumno');
+
+                const names = (alumno.nombre || "?").trim().split(' ');
+                let init = names[0].charAt(0).toUpperCase();
+                if (names.length > 1) {
+                    init += names[names.length - 1].charAt(0).toUpperCase();
+                } else if (names[0].length > 1) {
+                    init += names[0].charAt(1).toUpperCase();
+                }
+                const colors = ['#0d6efd', '#6f42c1', '#d63384', '#dc3545', '#fd7e14', '#198754', '#20c997', '#0dcaf0'];
+                const bg = colors[(alumno.nombre || "").length % colors.length];
+                const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+                    <rect width="100" height="100" fill="${bg}" />
+                    <text x="50" y="50" font-family="Arial, sans-serif" font-size="40" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="central">${init}</text>
+                </svg>`;
+
+                imgFoto.src = "data:image/svg+xml;utf8," + encodeURIComponent(svg);
+                imgFoto.onerror = null;
+
                 const statusText = document.getElementById('status-text');
 
                 if (alumno.autorizado === true) {
-                    document.body.style.backgroundColor = "#d4edda"; 
+                    document.body.style.backgroundColor = "#d4edda";
                     statusText.innerText = "AUTORIZADO";
                     statusText.style.color = "#155724";
                     statusText.style.backgroundColor = "#c3e6cb";
                 } else {
-                    document.body.style.backgroundColor = "#f8d7da"; 
+                    document.body.style.backgroundColor = "#f8d7da";
                     statusText.innerText = "DENEGADO";
                     statusText.style.color = "#721c24";
                     statusText.style.backgroundColor = "#f5c6cb";
@@ -459,7 +506,7 @@
         }
 
         document.getElementById('btn-logout').addEventListener('click', () => {
-            if(confirm("¿Cerrar sesión?")) {
+            if (confirm("¿Cerrar sesión?")) {
                 localStorage.clear();
                 location.reload();
             }
@@ -504,4 +551,5 @@
         }
     </script>
 </body>
+
 </html>
