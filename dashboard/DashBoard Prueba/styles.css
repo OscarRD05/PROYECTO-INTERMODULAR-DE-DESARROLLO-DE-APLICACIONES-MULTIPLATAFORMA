@@ -2,8 +2,8 @@
 .switch {
   position: relative;
   display: inline-block;
-  width: 70px;
-  height: 32px;
+  width: 100px;
+  height: 36px;
 }
 
 .switch input {
@@ -24,7 +24,7 @@
   align-items: center;
   justify-content: center;
 
-  font-size: 12px;
+  font-size: 14px;
   font-weight: bold;
   color: white;
 }
@@ -39,8 +39,8 @@
 .slider::before {
   content: "";
   position: absolute;
-  height: 24px;
-  width: 24px;
+  height: 28px;
+  width: 28px;
   left: 4px;
   background-color: white;
   border-radius: 50%;
@@ -49,14 +49,33 @@
 }
 
 /* ===== ESTADO ON ===== */
-input:checked + .slider {
+input:checked+.slider {
   background: linear-gradient(135deg, #7c3aed, #8b5cf6);
 }
 
-input:checked + .slider::after {
+input:checked+.slider::after {
   content: "ON";
 }
 
-input:checked + .slider::before {
-  transform: translateX(38px);
+input:checked+.slider::before {
+  transform: translateX(64px);
+}
+
+/* ===== TABLAS CON ANCHO FIJO ===== */
+table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+table td, table th {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* Permitir que el nombre se vea completo al pasar el ratón o que tenga algo más de espacio si se prefiere, 
+   pero por ahora forzamos el reparto equitativo como se pidió. */
+table th:first-child, table td:first-child {
+  width: 30%; /* Le damos un poco más al nombre pero limitado */
 }
