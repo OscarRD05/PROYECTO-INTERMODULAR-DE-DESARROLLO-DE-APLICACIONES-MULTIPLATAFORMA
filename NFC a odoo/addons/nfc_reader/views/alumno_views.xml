@@ -103,6 +103,7 @@
             <list>
                 <field name="nombre_completo"/>
                 <field name="matricula"/>
+                <field name="cial"/>
                 <field name="curso_id"/>
                 <field name="uid_tarjeta_rfid"/>
                 <field name="permiso_salida"/>
@@ -120,6 +121,7 @@
                     <group>
                         <field name="nombre_completo"/>
                         <field name="matricula"/>
+                        <field name="cial"/>
                         <field name="uid_tarjeta_rfid"/>
                         <field name="curso_id"/>
                         <field name="permiso_salida"/>

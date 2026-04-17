@@ -8,6 +8,7 @@ class Alumno(models.Model):
 
     nombre_completo = fields.Char(string="Nombre completo", required=True)
     matricula = fields.Char(string="Matrícula")
+    cial = fields.Char(string="CIAL")
     uid_tarjeta_rfid = fields.Char(string="UID Tarjeta RFID", required=True)
     permiso_salida = fields.Boolean(string="Permiso de salida", default=False)
     fotografia = fields.Binary(string="Fotografía")
