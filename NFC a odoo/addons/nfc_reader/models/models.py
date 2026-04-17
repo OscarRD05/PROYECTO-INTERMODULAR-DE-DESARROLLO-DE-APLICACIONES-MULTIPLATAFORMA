@@ -14,6 +14,7 @@ class Alumno(models.Model):
     curso = fields.Char(string="Curso")
     uid_nfc = fields.Char(string="UID NFC", required=True)
     activo = fields.Boolean(string="Activo", default=True)
+    autorizado_salir = fields.Boolean(string="Autorizado a Salir", default=False)
 
 
 # =========================
