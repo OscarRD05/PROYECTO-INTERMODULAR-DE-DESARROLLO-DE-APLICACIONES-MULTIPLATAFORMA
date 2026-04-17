@@ -1,14 +1,111 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+
+    <!-- ===================== PROFESOR ===================== -->
+    <record id="view_nfc_profesor_list" model="ir.ui.view">
+        <field name="name">nfc.profesor.list</field>
+        <field name="model">nfc.profesor</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="nombre_completo"/>
+                <field name="dni_nie"/>
+                <field name="uid_tarjeta_rfid"/>
+                <field name="usuario_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_nfc_profesor_form" model="ir.ui.view">
+        <field name="name">nfc.profesor.form</field>
+        <field name="model">nfc.profesor</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="nombre_completo"/>
+                        <field name="dni_nie"/>
+                        <field name="uid_tarjeta_rfid"/>
+                        <field name="usuario_id"/>
+                    </group>
+                    <notebook>
+                        <page string="Cursos / Grupos">
+                            <field name="cursos_ids">
+                                <list>
+                                    <field name="nombre_grupo"/>
+                                    <field name="aula_asignada"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_nfc_profesores" model="ir.actions.act_window">
+        <field name="name">Profesores</field>
+        <field name="res_model">nfc.profesor</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ===================== CURSO / GRUPO ===================== -->
+    <record id="view_nfc_curso_list" model="ir.ui.view">
+        <field name="name">nfc.curso_grupo.list</field>
+        <field name="model">nfc.curso_grupo</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="nombre_grupo"/>
+                <field name="aula_asignada"/>
+                <field name="tutor_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_nfc_curso_form" model="ir.ui.view">
+        <field name="name">nfc.curso_grupo.form</field>
+        <field name="model">nfc.curso_grupo</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="nombre_grupo"/>
+                        <field name="aula_asignada"/>
+                        <field name="tutor_id"/>
+                    </group>
+                    <notebook>
+                        <page string="Alumnos">
+                            <field name="alumnos_ids">
+                                <list>
+                                    <field name="nombre_completo"/>
+                                    <field name="matricula"/>
+                                    <field name="uid_tarjeta_rfid"/>
+                                    <field name="permiso_salida"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_nfc_cursos" model="ir.actions.act_window">
+        <field name="name">Cursos / Grupos</field>
+        <field name="res_model">nfc.curso_grupo</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ===================== ALUMNO ===================== -->
     <record id="view_nfc_alumno_list" model="ir.ui.view">
         <field name="name">nfc.alumno.list</field>
         <field name="model">nfc.alumno</field>
         <field name="arch" type="xml">
             <list>
-                <field name="name"/>
-                <field name="dni"/>
-                <field name="cial"/>
-                <field name="uid_nfc"/>
+                <field name="nombre_completo"/>
+                <field name="matricula"/>
+                <field name="curso_id"/>
+                <field name="uid_tarjeta_rfid"/>
+                <field name="permiso_salida"/>
             </list>
         </field>
     </record>
@@ -19,12 +116,25 @@
         <field name="arch" type="xml">
             <form>
                 <sheet>
+                    <field name="fotografia" widget="image" class="oe_avatar"/>
                     <group>
-                        <field name="name"/>
-                        <field name="dni"/>
-                        <field name="cial"/>
-                        <field name="uid_nfc"/>
+                        <field name="nombre_completo"/>
+                        <field name="matricula"/>
+                        <field name="uid_tarjeta_rfid"/>
+                        <field name="curso_id"/>
+                        <field name="permiso_salida"/>
                     </group>
+                    <notebook>
+                        <page string="Asistencia">
+                            <field name="asistencia_ids">
+                                <list>
+                                    <field name="fecha_hora"/>
+                                    <field name="tipo"/>
+                                    <field name="justificado"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
                 </sheet>
             </form>
         </field>
@@ -36,6 +146,48 @@
         <field name="view_mode">list,form</field>
     </record>
 
+    <!-- ===================== REGISTROS ASISTENCIA ===================== -->
+    <record id="view_nfc_asistencia_list" model="ir.ui.view">
+        <field name="name">nfc.registro_asistencia.list</field>
+        <field name="model">nfc.registro_asistencia</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="fecha_hora"/>
+                <field name="alumno_id"/>
+                <field name="tipo"/>
+                <field name="justificado"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_nfc_asistencia_form" model="ir.ui.view">
+        <field name="name">nfc.registro_asistencia.form</field>
+        <field name="model">nfc.registro_asistencia</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="alumno_id"/>
+                        <field name="fecha_hora"/>
+                        <field name="tipo"/>
+                        <field name="justificado"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_nfc_asistencia" model="ir.actions.act_window">
+        <field name="name">Registros de Asistencia</field>
+        <field name="res_model">nfc.registro_asistencia</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ===================== MENÚ ===================== -->
     <menuitem id="menu_nfc_root" name="NFC" sequence="10"/>
-    <menuitem id="menu_nfc_alumnos" name="Alumnos" parent="menu_nfc_root" action="action_nfc_alumnos" sequence="10"/>
+    <menuitem id="menu_nfc_profesores" name="Profesores" parent="menu_nfc_root" action="action_nfc_profesores" sequence="10"/>
+    <menuitem id="menu_nfc_cursos" name="Cursos / Grupos" parent="menu_nfc_root" action="action_nfc_cursos" sequence="20"/>
+    <menuitem id="menu_nfc_alumnos" name="Alumnos" parent="menu_nfc_root" action="action_nfc_alumnos" sequence="30"/>
+    <menuitem id="menu_nfc_asistencia" name="Asistencia" parent="menu_nfc_root" action="action_nfc_asistencia" sequence="40"/>
+
 </odoo>
