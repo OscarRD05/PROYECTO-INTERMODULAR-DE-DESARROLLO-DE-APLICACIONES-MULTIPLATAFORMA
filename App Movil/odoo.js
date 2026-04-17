@@ -64,9 +64,8 @@ class OdooService {
         return result.records;
     }
 
-    async createLog(uidNfc, alumnoId, tipo = 'entrada') {
+    async createLog(alumnoId, tipo = 'entrada') {
         return await this.callApi('/nfc/api/log', {
-            uid_nfc: uidNfc,
             alumno_id: alumnoId,
             tipo: tipo
         });

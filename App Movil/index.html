@@ -409,30 +409,30 @@
             try {
                 let domain = [];
                 if (tipo === 'nfc' || tipo === 'id_odoo') {
-                    domain = [['uid_nfc', '=', datoLimpio]];
+                    domain = [['uid_tarjeta_rfid', '=', datoLimpio]];
                 } else {
-                    domain = [['name', 'ilike', datoLimpio]];
+                    domain = [['nombre_completo', 'ilike', datoLimpio]];
                 }
 
-                const students = await odoo.searchRead('nfc.alumno', domain, ['id', 'name', 'curso', 'uid_nfc', 'autorizado_salir']);
+                const students = await odoo.searchRead('nfc.alumno', domain, ['id', 'nombre_completo', 'curso_id', 'uid_tarjeta_rfid', 'permiso_salida']);
 
                 if (students.length === 1) {
                     const alumno = students[0];
                     
-                    // Registrar en Odoo nfc.log
+                    // Registrar en Odoo nfc.registro_asistencia
                     try {
-                        await odoo.createLog(alumno.uid_nfc, alumno.id, 'entrada');
+                        await odoo.createLog(alumno.id, 'entrada');
                     } catch (e) {
                         console.error("No se pudo crear el log en Odoo", e);
                     }
 
                     mostrarResultado({
                         encontrado: true,
-                        nombre: alumno.name || "Sin nombre",
-                        curso: alumno.curso || "Sin curso",
+                        nombre: alumno.nombre_completo || "Sin nombre",
+                        curso: alumno.curso_id ? alumno.curso_id[1] : "Sin grupo",
                         foto: "default.jpg",
                         metodo: tipo,
-                        autorizado: alumno.autorizado_salir
+                        autorizado: alumno.permiso_salida
                     });
                     log.innerText = "";
                 } else if (students.length > 1) {
@@ -444,12 +444,12 @@
                     students.forEach(alumno => {
                         const btn = document.createElement("button");
                         btn.className = "accion btn-lista";
-                        btn.innerHTML = `<b>${alumno.name}</b> <br> <span style='font-size:0.8em; color:gray'>${alumno.curso}</span>`;
+                        btn.innerHTML = `<b>${alumno.nombre_completo}</b> <br> <span style='font-size:0.8em; color:gray'>${alumno.curso_id ? alumno.curso_id[1] : ''}</span>`;
 
                         btn.onclick = () => {
                             document.getElementById('lista-desempate').style.display = "none";
                             log.innerText = "Cargando...";
-                            procesarFichaje(alumno.uid_nfc, "id_odoo");
+                            procesarFichaje(alumno.uid_tarjeta_rfid, "id_odoo");
                         };
 
                         contenedorBtn.appendChild(btn);

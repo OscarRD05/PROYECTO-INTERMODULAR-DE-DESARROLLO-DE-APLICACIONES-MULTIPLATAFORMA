@@ -16,9 +16,8 @@ class NFCController(http.Controller):
         return {"status": "ok", "records": records}
 
     @http.route('/nfc/api/log', type='json', auth='user', methods=['POST'], cors='*', csrf=False)
-    def api_log(self, uid_nfc, alumno_id, tipo='entrada', **kwargs):
-        log = request.env['nfc.log'].sudo().create({
-            'uid_nfc': uid_nfc,
+    def api_log(self, alumno_id, tipo='entrada', **kwargs):
+        log = request.env['nfc.registro_asistencia'].sudo().create({
             'alumno_id': alumno_id,
             'tipo': tipo
         })
@@ -29,9 +28,14 @@ class NFCController(http.Controller):
         if not uid:
             return {"status": "error", "message": "NO UID"}
 
-        request.env['nfc.log'].sudo().create({
-            'uid_nfc': uid, 
-            'alumno_id': request.env['nfc.alumno'].sudo().search([('uid_nfc', '=', uid)], limit=1).id
-        })
-
-        return {"status": "ok", "uid": uid}
+        # Buscar alumno por UID de tarjeta RFID (nuevo nombre de campo)
+        alumno = request.env['nfc.alumno'].sudo().search([('uid_tarjeta_rfid', '=', uid)], limit=1)
+        
+        if alumno:
+            request.env['nfc.registro_asistencia'].sudo().create({
+                'alumno_id': alumno.id,
+                'tipo': 'entrada'
+            })
+            return {"status": "ok", "uid": uid, "alumno": alumno.nombre_completo}
+        
+        return {"status": "error", "message": "Alumno no encontrado"}
