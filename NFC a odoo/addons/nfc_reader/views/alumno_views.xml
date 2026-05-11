@@ -21,6 +21,7 @@
         <field name="arch" type="xml">
             <form>
                 <sheet>
+                    <field name="fotografia" widget="image" class="oe_avatar"/>
                     <group>
                         <field name="nombre_completo"/>
                         <field name="dni_nie"/>
@@ -52,9 +53,14 @@
                 <field name="uid_tarjeta_rfid"/>
                 <templates>
                     <t t-name="card">
-                        <strong><field name="nombre_completo"/></strong>
-                        <div>DNI/NIE: <field name="dni_nie"/></div>
-                        <div>RFID: <field name="uid_tarjeta_rfid"/></div>
+                        <aside>
+                            <field name="fotografia" widget="image" options="{'size': [64, 64]}"/>
+                        </aside>
+                        <main>
+                            <strong><field name="nombre_completo"/></strong>
+                            <div>DNI/NIE: <field name="dni_nie"/></div>
+                            <div>RFID: <field name="uid_tarjeta_rfid"/></div>
+                        </main>
                     </t>
                 </templates>
             </kanban>

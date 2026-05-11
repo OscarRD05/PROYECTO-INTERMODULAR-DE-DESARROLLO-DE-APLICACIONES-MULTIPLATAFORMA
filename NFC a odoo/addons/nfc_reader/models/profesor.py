@@ -9,6 +9,7 @@ class Profesor(models.Model):
     nombre_completo = fields.Char(string="Nombre completo", required=True)
     dni_nie = fields.Char(string="DNI / NIE")
     uid_tarjeta_rfid = fields.Char(string="UID Tarjeta RFID")
+    fotografia = fields.Binary(string="Fotografía")
 
     # Vinculado al perfil de usuario de Odoo
     usuario_id = fields.Many2one(
