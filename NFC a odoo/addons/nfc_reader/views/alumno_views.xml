@@ -51,12 +51,10 @@
                 <field name="dni_nie"/>
                 <field name="uid_tarjeta_rfid"/>
                 <templates>
-                    <t t-name="kanban-box">
-                        <div class="oe_kanban_global_click">
-                            <strong><field name="nombre_completo"/></strong>
-                            <div>DNI/NIE: <field name="dni_nie"/></div>
-                            <div>RFID: <field name="uid_tarjeta_rfid"/></div>
-                        </div>
+                    <t t-name="card">
+                        <strong><field name="nombre_completo"/></strong>
+                        <div>DNI/NIE: <field name="dni_nie"/></div>
+                        <div>RFID: <field name="uid_tarjeta_rfid"/></div>
                     </t>
                 </templates>
             </kanban>
@@ -168,21 +166,22 @@
         <field name="model">nfc.alumno</field>
         <field name="arch" type="xml">
             <kanban>
+                <field name="id"/>
                 <field name="nombre_completo"/>
                 <field name="cial"/>
+                <field name="uid_tarjeta_rfid"/>
                 <field name="curso_id"/>
                 <field name="fotografia"/>
                 <templates>
-                    <t t-name="kanban-box">
-                        <div class="oe_kanban_global_click">
-                            <div class="o_kanban_image">
-                                <img t-att-src="kanban_image('nfc.alumno', 'fotografia', record.id.raw_value)" alt="Foto" class="o_image_64_cover"/>
-                            </div>
-                            <div class="oe_kanban_details">
+                    <t t-name="card">
+                        <div class="d-flex">
+                            <img t-att-src="kanban_image('nfc.alumno', 'fotografia', record.id.raw_value)" alt="Foto" class="o_image_64_cover me-3" style="width:64px;height:64px;object-fit:cover;border-radius:8px;"/>
+                            <div>
                                 <strong><field name="nombre_completo"/></strong>
                                 <div>CIAL: <field name="cial"/></div>
+                                <div>RFID: <field name="uid_tarjeta_rfid"/></div>
                                 <div t-if="record.curso_id.value">
-                                    <span class="badge rounded-pill text-bg-primary">
+                                    <span class="badge rounded-pill text-bg-primary mt-1">
                                         <field name="curso_id"/>
                                     </span>
                                 </div>
