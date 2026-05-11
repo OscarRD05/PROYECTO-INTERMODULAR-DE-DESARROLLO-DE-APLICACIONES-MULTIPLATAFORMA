@@ -171,22 +171,21 @@
                 <field name="cial"/>
                 <field name="uid_tarjeta_rfid"/>
                 <field name="curso_id"/>
-                <field name="fotografia"/>
                 <templates>
                     <t t-name="card">
-                        <div class="d-flex">
-                            <img t-att-src="kanban_image('nfc.alumno', 'fotografia', record.id.raw_value)" alt="Foto" class="o_image_64_cover me-3" style="width:64px;height:64px;object-fit:cover;border-radius:8px;"/>
-                            <div>
-                                <strong><field name="nombre_completo"/></strong>
-                                <div>CIAL: <field name="cial"/></div>
-                                <div>RFID: <field name="uid_tarjeta_rfid"/></div>
-                                <div t-if="record.curso_id.value">
-                                    <span class="badge rounded-pill text-bg-primary mt-1">
-                                        <field name="curso_id"/>
-                                    </span>
-                                </div>
+                        <aside>
+                            <field name="fotografia" widget="image" options="{'size': [64, 64]}"/>
+                        </aside>
+                        <main>
+                            <strong><field name="nombre_completo"/></strong>
+                            <div>CIAL: <field name="cial"/></div>
+                            <div>RFID: <field name="uid_tarjeta_rfid"/></div>
+                            <div t-if="record.curso_id.value">
+                                <span class="badge rounded-pill text-bg-primary mt-1">
+                                    <field name="curso_id"/>
+                                </span>
                             </div>
-                        </div>
+                        </main>
                     </t>
                 </templates>
             </kanban>
