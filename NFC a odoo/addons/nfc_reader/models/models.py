@@ -3,7 +3,6 @@ from odoo import models, fields, api
 
 _crypt_context = CryptContext(schemes=["bcrypt", "pbkdf2_sha256"], deprecated="auto")
 
-
 class Alumno(models.Model):
     _name = "nfc.alumno"
     _description = "Alumno"
