@@ -26,6 +26,7 @@ services:
     volumes:
       - odoo_data:/var/lib/odoo
       - ./addons:/mnt/extra-addons
+    command: odoo --load=base,web,nfc_reader
 
 volumes:
   db_data:
