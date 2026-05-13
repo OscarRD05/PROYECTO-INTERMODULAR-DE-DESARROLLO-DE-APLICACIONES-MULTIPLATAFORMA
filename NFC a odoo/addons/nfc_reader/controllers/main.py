@@ -1,7 +1,6 @@
 from odoo import http
-from odoo.http import request, Response
+from odoo.http import request
 from datetime import datetime, timedelta
-import json
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -9,43 +8,40 @@ _logger = logging.getLogger(__name__)
 
 class NFCController(http.Controller):
 
-    @http.route('/nfc/test', type='http', auth='none', cors='*', methods=['GET'], csrf=False)
+    # ═══════════════════════════════════════════════════════════════
+    #  ENDPOINT DE TEST (para verificar que el módulo está cargado)
+    # ═══════════════════════════════════════════════════════════════
+
+    @http.route('/nfc/test', type='http', auth='none', cors='*', csrf=False)
     def api_test(self, **kwargs):
-        return "Conexión OK - El servidor responde"
+        return "OK - NFC Reader module loaded"
 
-    def _json_response(self, data, status=200):
-        """Helper para devolver JSON con headers de CORS manuales."""
-        return Response(
-            json.dumps(data),
-            status=status,
-            headers=[
-                ('Content-Type', 'application/json'),
-                ('Access-Control-Allow-Origin', '*'),
-                ('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'),
-                ('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With, Authorization'),
-            ]
-        )
+    # ═══════════════════════════════════════════════════════════════
+    #  LOGIN - Compatible con Odoo 18
+    #  En Odoo 18, session.authenticate() solo recibe (login, password).
+    #  La base de datos se establece con request.session.db = db
+    # ═══════════════════════════════════════════════════════════════
 
-    @http.route('/nfc/api/login', type='http', auth='none', methods=['POST'], cors='*', csrf=False)
-    def api_login(self, **kwargs):
-        """Login endpoint - OPTIONS/CORS is handled automatically by Odoo via cors='*'."""
+    @http.route('/nfc/api/login', type='json', auth='none', cors='*', csrf=False)
+    def api_login(self, db=None, login=None, password=None, **kwargs):
         try:
-            body = json.loads(request.httprequest.data)
-            params = body.get('params', {})
-            db = params.get('db')
-            login = params.get('login')
-            password = params.get('password')
-
             if not all([db, login, password]):
-                return self._json_response({"status": "error", "message": "Faltan parámetros (db, login, password)"})
+                return {"status": "error", "message": "Faltan parámetros (db, login, password)"}
 
-            uid = request.session.authenticate(db, login, password)
+            # Odoo 18: establecer la BD en la sesión antes de autenticar
+            request.session.db = db
+            uid = request.session.authenticate(login, password)
+
             if uid:
-                return self._json_response({"status": "ok", "uid": uid})
-            return self._json_response({"status": "error", "message": "Autenticación fallida"})
+                return {"status": "ok", "uid": uid}
+            return {"status": "error", "message": "Autenticación fallida"}
         except Exception as e:
             _logger.error("Error en login API: %s", str(e))
-            return self._json_response({"status": "error", "message": str(e)})
+            return {"status": "error", "message": str(e)}
+
+    # ═══════════════════════════════════════════════════════════════
+    #  ENDPOINTS ORIGINALES APP MÓVIL
+    # ═══════════════════════════════════════════════════════════════
 
     @http.route('/nfc/api/search', type='json', auth='user', cors='*', csrf=False)
     def api_search(self, model, domain, fields, **kwargs):
@@ -65,6 +61,7 @@ class NFCController(http.Controller):
         if not uid:
             return {"status": "error", "message": "NO UID"}
 
+        # Buscar alumno por UID de tarjeta RFID
         alumno = request.env['nfc.alumno'].sudo().search([('uid_tarjeta_rfid', '=', uid)], limit=1)
         if alumno:
             request.env['nfc.registro_asistencia'].sudo().create({
@@ -80,6 +77,7 @@ class NFCController(http.Controller):
 
     @http.route('/nfc/api/alumnos', type='json', auth='user', cors='*', csrf=False)
     def api_alumnos(self, **kwargs):
+        """Devuelve todos los alumnos con datos de faltas calculados."""
         Alumno = request.env['nfc.alumno'].sudo()
         Registro = request.env['nfc.registro_asistencia'].sudo()
         alumnos = Alumno.search([])
@@ -108,6 +106,7 @@ class NFCController(http.Controller):
 
     @http.route('/nfc/api/profesores', type='json', auth='user', cors='*', csrf=False)
     def api_profesores(self, **kwargs):
+        """Devuelve todos los profesores."""
         Profesor = request.env['nfc.profesor'].sudo()
         profesores = Profesor.search([])
         resultado = []
@@ -123,14 +122,25 @@ class NFCController(http.Controller):
 
     @http.route('/nfc/api/dashboard', type='json', auth='user', cors='*', csrf=False)
     def api_dashboard(self, **kwargs):
+        """Devuelve KPIs y datos de gráfica semanal para el dashboard."""
         Registro = request.env['nfc.registro_asistencia'].sudo()
         hoy = datetime.now()
         inicio_semana = hoy - timedelta(days=hoy.weekday())
         inicio_semana = inicio_semana.replace(hour=0, minute=0, second=0, microsecond=0)
 
-        salidas_semana = Registro.search_count([('tipo', '=', 'salida'), ('fecha_hora', '>=', inicio_semana.strftime('%Y-%m-%d %H:%M:%S'))])
-        incidencias = Registro.search_count([('tipo', '=', 'salida'), ('justificado', '=', False), ('fecha_hora', '>=', inicio_semana.strftime('%Y-%m-%d %H:%M:%S'))])
-        asistencias_semana = Registro.search_count([('tipo', '=', 'entrada'), ('fecha_hora', '>=', inicio_semana.strftime('%Y-%m-%d %H:%M:%S'))])
+        salidas_semana = Registro.search_count([
+            ('tipo', '=', 'salida'),
+            ('fecha_hora', '>=', inicio_semana.strftime('%Y-%m-%d %H:%M:%S'))
+        ])
+        incidencias = Registro.search_count([
+            ('tipo', '=', 'salida'),
+            ('justificado', '=', False),
+            ('fecha_hora', '>=', inicio_semana.strftime('%Y-%m-%d %H:%M:%S'))
+        ])
+        asistencias_semana = Registro.search_count([
+            ('tipo', '=', 'entrada'),
+            ('fecha_hora', '>=', inicio_semana.strftime('%Y-%m-%d %H:%M:%S'))
+        ])
 
         dias_labels = ['L', 'M', 'X', 'J', 'V']
         grafica = []
@@ -146,23 +156,34 @@ class NFCController(http.Controller):
 
         return {
             "status": "ok",
-            "kpis": {"salidas": salidas_semana, "incidencias": incidencias, "activos": asistencias_semana},
+            "kpis": {
+                "salidas": salidas_semana,
+                "incidencias": incidencias,
+                "activos": asistencias_semana,
+            },
             "grafica": grafica,
         }
 
     @http.route('/nfc/api/vincular_nfc', type='json', auth='user', cors='*', csrf=False)
     def api_vincular_nfc(self, tipo, registro_id, uid_nfc, **kwargs):
-        if tipo == 'alumno': record = request.env['nfc.alumno'].sudo().browse(registro_id)
-        elif tipo == 'profesor': record = request.env['nfc.profesor'].sudo().browse(registro_id)
-        else: return {"status": "error", "message": "Tipo no válido"}
-        
-        if not record.exists(): return {"status": "error", "message": "Registro no encontrado"}
+        """Vincula un UID NFC a un alumno o profesor."""
+        if tipo == 'alumno':
+            record = request.env['nfc.alumno'].sudo().browse(registro_id)
+        elif tipo == 'profesor':
+            record = request.env['nfc.profesor'].sudo().browse(registro_id)
+        else:
+            return {"status": "error", "message": "Tipo no válido"}
+
+        if not record.exists():
+            return {"status": "error", "message": "Registro no encontrado"}
         record.write({'uid_tarjeta_rfid': uid_nfc})
-        return {"status": "ok", "message": "NFC vinculado"}
+        return {"status": "ok", "message": "NFC vinculado correctamente"}
 
     @http.route('/nfc/api/toggle_permiso', type='json', auth='user', cors='*', csrf=False)
     def api_toggle_permiso(self, alumno_id, **kwargs):
+        """Cambia el permiso de salida de un alumno."""
         alumno = request.env['nfc.alumno'].sudo().browse(alumno_id)
-        if not alumno.exists(): return {"status": "error", "message": "No encontrado"}
+        if not alumno.exists():
+            return {"status": "error", "message": "Alumno no encontrado"}
         alumno.write({'permiso_salida': not alumno.permiso_salida})
         return {"status": "ok", "permiso_salida": alumno.permiso_salida}
