@@ -6,26 +6,12 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
+
 class NFCController(http.Controller):
 
-    @http.route('/nfc/test', type='http', auth='none', cors='*', methods=['GET', 'OPTIONS'], csrf=False)
+    @http.route('/nfc/test', type='http', auth='none', cors='*', methods=['GET'], csrf=False)
     def api_test(self, **kwargs):
-        if request.httprequest.method == 'OPTIONS':
-            return self._cors_preflight_response()
         return "Conexión OK - El servidor responde"
-
-    def _cors_preflight_response(self):
-        """Respuesta para preflight CORS (OPTIONS)."""
-        return Response(
-            '',
-            status=204,
-            headers=[
-                ('Access-Control-Allow-Origin', '*'),
-                ('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'),
-                ('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With, Authorization'),
-                ('Access-Control-Max-Age', '86400'),
-            ]
-        )
 
     def _json_response(self, data, status=200):
         """Helper para devolver JSON con headers de CORS manuales."""
@@ -35,19 +21,14 @@ class NFCController(http.Controller):
             headers=[
                 ('Content-Type', 'application/json'),
                 ('Access-Control-Allow-Origin', '*'),
-                ('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'),
+                ('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'),
                 ('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With, Authorization'),
-                ('Access-Control-Max-Age', '86400'),
             ]
         )
 
-    @http.route('/nfc/api/login', type='http', auth='none', methods=['OPTIONS'], cors='*', csrf=False, save_session=False)
-    def api_login_options(self, **kwargs):
-        """Manejador dedicado para preflight CORS del endpoint de login."""
-        return self._cors_preflight_response()
-
-    @http.route('/nfc/api/login', type='http', auth='none', methods=['POST'], cors='*', csrf=False, save_session=False)
+    @http.route('/nfc/api/login', type='http', auth='none', methods=['POST'], cors='*', csrf=False)
     def api_login(self, **kwargs):
+        """Login endpoint - OPTIONS/CORS is handled automatically by Odoo via cors='*'."""
         try:
             body = json.loads(request.httprequest.data)
             params = body.get('params', {})
