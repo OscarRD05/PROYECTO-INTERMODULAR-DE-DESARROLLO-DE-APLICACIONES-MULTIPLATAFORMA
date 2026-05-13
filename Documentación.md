@@ -7,6 +7,7 @@ Joel -> Hizo los diagramas de Despliegue (UML)
 Óscar -> Hizo el PoC (Subido al Github)
 Manuel -> Hizo el Prototipo de APK (Subido a Github)
 Óscar -> Hizo el DashBoard de prueba (Subido a Github)
+Ayoze -> Hizo nuestro Modelo 3D para el nfc
 
 Ayoze y Joel -> Se encargaron de Instalar y programar las Raspberry
 
@@ -25,8 +26,18 @@ Para conectarse a la base de datos de odoo, hay que hacer un ping a la raspberry
 Una vez haya hecho ping, en el navegador pones (raspberry.local:8069) y ya te lleva a odoo
 
 
+
 En odoo como ya dijimos hay un modulo lector_nfc de prueba que lee el keyboard(Porque la tarjeta nfc escribe directamente el id y pone enter) y una vez 
 leido se va el script de python comprueba si http://raspberry.local:8069/nfc/read el status esta ok
 
 
+Recordatorio Para Nosotros
 
+Entrar a Rapsberry -> ssh dietpi@10.102.7.216
+Contraseña 1234
+
+
+Levantar la app de movil, seria entrar en esa carpeta desde la cmd
+y poner
+
+python -m http.server 8081 --bind 0.0.0.0
