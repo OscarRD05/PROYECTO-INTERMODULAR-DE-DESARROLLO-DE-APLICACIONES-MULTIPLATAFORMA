@@ -34,7 +34,7 @@ class OdooService {
             if (data.error) {
                 throw new Error(data.error.data.message || data.error.message);
             }
-            
+
             if (data.result.status === "error") {
                 throw new Error(data.result.message);
             }
@@ -49,9 +49,9 @@ class OdooService {
         }
     }
 
-    async login(username, password) {
+    async login(username, password, dbName = 'prueba') {
         const result = await this.callApi('/nfc/api/login', {
-            db: this.db,
+            db: dbName,
             login: username,
             password: password
         });
