@@ -3,6 +3,7 @@
  */
 class OdooService {
     constructor(baseUrl, db) {
+        console.log("OdooService inicializado con DB:", db);
         this.baseUrl = baseUrl;
         this.db = db;
         this.uid = null;
@@ -10,6 +11,9 @@ class OdooService {
 
     async callApi(endpoint, params) {
         const url = `${this.baseUrl}${endpoint}`;
+        
+        console.log(`Llamando a API: ${endpoint}`, params); // DEBUG
+
         const body = {
             jsonrpc: "2.0",
             params: params,
@@ -43,13 +47,15 @@ class OdooService {
         } catch (error) {
             console.error("Odoo API Bridge error:", error);
             if (error.message === "Failed to fetch") {
-                throw new Error("No se pudo conectar con Odoo. Verifica que el servidor está encendido, que estás en la misma red (WiFi) y que no hay bloqueos de CORS o Mixed Content (HTTP/HTTPS).");
+                throw new Error("No se pudo conectar con Odoo. Verifica la IP/URL y que el servidor responda.");
             }
             throw error;
         }
     }
 
     async login(username, password) {
+        console.log("Intentando login para usuario:", username, "en DB:", this.db);
+        
         const result = await this.callApi('/nfc/api/login', {
             db: this.db,
             login: username,
