@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_nfc_alumno,nfc.alumno,model_nfc_alumno,base.group_user,1,1,1,1
+access_nfc_profesor,nfc.profesor,model_nfc_profesor,base.group_user,1,1,1,1
+access_nfc_curso_grupo,nfc.curso_grupo,model_nfc_curso_grupo,base.group_user,1,1,1,1
+access_nfc_registro_asistencia,nfc.registro_asistencia,model_nfc_registro_asistencia,base.group_user,1,1,1,1

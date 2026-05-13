@@ -13,7 +13,45 @@
 
 <body class="bg-light">
 
-  <div class="container-fluid">
+  <!-- ═══════════════════════════════════════════ -->
+  <!--  MODAL DE LOGIN                             -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="login-overlay" class="login-overlay">
+    <div class="login-card">
+      <div class="login-header">
+        <span class="login-icon">🔐</span>
+        <h2>Dashboard Jefatura</h2>
+        <p>Inicia sesión con tu cuenta de Odoo</p>
+      </div>
+
+      <div class="login-body">
+        <div class="login-field">
+          <label for="login-url">URL Odoo</label>
+          <input type="text" id="login-url" value="http://raspberry.local:8069" placeholder="http://servidor:8069">
+        </div>
+        <div class="login-field">
+          <label for="login-db">Base de datos</label>
+          <input type="text" id="login-db" value="prueba" placeholder="nombre_bd">
+        </div>
+        <div class="login-field">
+          <label for="login-user">Usuario</label>
+          <input type="text" id="login-user" placeholder="admin">
+        </div>
+        <div class="login-field">
+          <label for="login-pass">Contraseña</label>
+          <input type="password" id="login-pass" placeholder="••••••••">
+        </div>
+
+        <button id="btn-login" class="login-btn">ENTRAR</button>
+        <div id="login-error" class="login-error"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!--  CONTENEDOR PRINCIPAL (oculto hasta login) -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="app-container" class="container-fluid d-none">
     <div class="row">
 
       <aside class="col-md-3 col-lg-2 bg-white border-end min-vh-100 p-3">
@@ -34,10 +72,23 @@
             <a id="btn-nfc" class="nav-link text-dark" href="#">📡 Vinculación NFC</a>
           </li>
         </ul>
+
+        <div class="mt-auto pt-4 border-top mt-4">
+          <small class="text-muted" id="session-info"></small>
+          <button id="btn-logout" class="btn btn-outline-danger btn-sm w-100 mt-2">Cerrar sesión</button>
+        </div>
       </aside>
 
       <!-- CONTENIDO -->
       <main class="col-md-9 col-lg-10 p-4">
+
+        <!-- LOADING SPINNER -->
+        <div id="loading-spinner" class="loading-container d-none">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+          </div>
+          <p class="mt-2 text-muted">Cargando datos de Odoo...</p>
+        </div>
 
         <!-- DASHBOARD -->
         <div id="vista-dashboard">
@@ -66,7 +117,7 @@
               <div class="card text-white bg-success">
                 <div class="card-header">Asistencias (semanal)</div>
                 <div class="card-body">
-                  <h2 class="text-center" id="kpi-activos">0%</h2>
+                  <h2 class="text-center" id="kpi-activos">0</h2>
                 </div>
               </div>
             </div>

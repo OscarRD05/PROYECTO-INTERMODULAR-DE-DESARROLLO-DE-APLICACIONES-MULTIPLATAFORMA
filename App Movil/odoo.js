@@ -19,6 +19,7 @@ class OdooService {
         try {
             const response = await fetch(url, {
                 method: 'POST',
+                mode: 'cors',
                 headers: {
                     'Content-Type': 'application/json'
                 },
@@ -41,6 +42,9 @@ class OdooService {
             return data.result;
         } catch (error) {
             console.error("Odoo API Bridge error:", error);
+            if (error.message === "Failed to fetch") {
+                throw new Error("No se pudo conectar con Odoo. Verifica que el servidor está encendido, que estás en la misma red (WiFi) y que no hay bloqueos de CORS o Mixed Content (HTTP/HTTPS).");
+            }
             throw error;
         }
     }
