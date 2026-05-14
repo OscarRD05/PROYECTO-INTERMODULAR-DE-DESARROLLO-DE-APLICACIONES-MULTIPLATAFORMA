@@ -13,9 +13,9 @@ class OdooService {
   async callApi(endpoint, params = {}) {
     const url = `${this.baseUrl}${endpoint}`;
 
-    // Si ya estamos autenticados, Odoo usa la sesión por cookie si estamos en el mismo dominio,
-    // pero para llamadas cross-domain o desde apps, a veces necesitamos manejar la sesión.
-    // Sin embargo, Odoo's JSON-RPC espera este formato:
+    params = params || {};
+    params.db = this.db;
+
     const body = {
       jsonrpc: "2.0",
       params: params,
