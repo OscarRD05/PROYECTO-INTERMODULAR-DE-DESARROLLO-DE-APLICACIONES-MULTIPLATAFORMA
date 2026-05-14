@@ -25,10 +25,12 @@ class NFCController(http.Controller):
 
             _logger.info("Intento de login API: DB=%s, User=%s", db, login)
             
-            # Establecer base de datos
-            request.session.db = db
-            # Autenticar (Odoo 18: login, password)
-            uid = request.session.authenticate(login, password)
+            credential = {
+                'login': login,
+                'password': password,
+                'type': 'password'
+            }
+            uid = request.session.authenticate(db, credential)
 
             if uid:
                 return {"status": "ok", "uid": uid}
