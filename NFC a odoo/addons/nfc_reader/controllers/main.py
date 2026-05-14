@@ -45,18 +45,15 @@ class NFCController(http.Controller):
         records = request.env[model].sudo().search_read(domain, fields)
         return {"status": "ok", "records": records}
 
-    @http.route('/nfc/api/search_maui', type='json', auth='public', cors='*', csrf=False)
-    def api_search_maui(self, model, domain, fields, **kwargs):
+    @http.route('/nfc/api/search_maui', type='http', auth='public', cors='*', csrf=False, methods=['POST'])
+    def api_search_maui(self, **kwargs):
     
-        records = request.env[model].sudo().search_read(
-            domain,
-            fields
-        )
+        data = json.loads(request.httprequest.data)
     
-        return {
-            "status": "ok",
-            "records": records
-        }
+        params = data.get("params", {})
+    
+        model = params.get("model")
+        domain
     
     @http.route('/nfc/api/log', type='json', auth='public', cors='*', csrf=False)
     def api_log(self, alumno_id, tipo='entrada', **kwargs):
