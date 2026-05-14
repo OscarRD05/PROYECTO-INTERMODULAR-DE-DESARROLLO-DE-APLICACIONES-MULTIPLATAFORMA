@@ -14,7 +14,7 @@ class NFCController(http.Controller):
     def api_test(self, **kwargs):
         return "OK - NFC Reader module loaded"
 
-    @http.route('/hola', type='http', auth='public')
+    @http.route('/hola', type='http', auth='public', csrf=False)
     def hola(self, **kwargs):
         return "FUNCIONA"
 
