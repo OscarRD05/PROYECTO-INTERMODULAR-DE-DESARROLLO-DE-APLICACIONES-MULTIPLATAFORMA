@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard Informes - Jefatura</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- jsPDF AutoTable -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+
+  <!-- Estilos propios -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="bg-light">
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!--  MODAL DE LOGIN                             -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="login-overlay" class="login-overlay">
+    <div class="login-card">
+      <div class="login-header">
+        <span class="login-icon">🔐</span>
+        <h2>Dashboard Jefatura</h2>
+        <p>Inicia sesión con tu cuenta de Odoo</p>
+      </div>
+
+      <div class="login-body">
+        <div class="login-field">
+          <label for="login-url">URL Odoo <small class="text-muted">(vacío = proxy local)</small></label>
+          <input type="text" id="login-url" placeholder="http://servidor:8069 (vacío = localhost proxy)">
+        </div>
+        <div class="login-field">
+          <label for="login-db">Base de datos</label>
+          <input type="text" id="login-db" value="prueba" placeholder="nombre_bd">
+        </div>
+        <div class="login-field">
+          <label for="login-user">Correo Electrónico</label>
+          <input type="text" id="login-user" placeholder="admin">
+        </div>
+        <div class="login-field">
+          <label for="login-pass">Contraseña</label>
+          <input type="password" id="login-pass" placeholder="••••••••">
+        </div>
+
+        <button id="btn-login" class="login-btn">ENTRAR</button>
+        <div id="login-error" class="login-error"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!--  CONTENEDOR PRINCIPAL (oculto hasta login)  -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="app-container" class="container-fluid d-none">
+    <div class="row">
+
+      <!-- SIDEBAR -->
+      <aside class="col-md-3 col-lg-2 bg-white border-end min-vh-100 p-3">
+        <h5 class="mb-4">Panel de Control</h5>
+
+        <ul class="nav flex-column gap-2">
+          <li class="nav-item">
+            <a id="btn-dashboard" class="nav-link active bg-primary-subtle text-primary fw-semibold rounded" href="#">
+              📊 Estadísticas
+            </a>
+          </li>
+          <li class="nav-item">
+            <a id="btn-alumnos" class="nav-link text-dark" href="#">👥 Alumnado</a>
+          </li>
+          <li class="nav-item">
+            <a id="btn-profesores" class="nav-link text-dark" href="#">🧑‍🏫 Profesorado</a>
+          </li>
+          <li class="nav-item">
+            <a id="btn-nfc" class="nav-link text-dark" href="#">📡 Vinculación NFC</a>
+          </li>
+        </ul>
+
+        <div class="mt-auto pt-4 border-top mt-4">
+          <small class="text-muted" id="session-info"></small>
+          <button id="btn-logout" class="btn btn-outline-danger btn-sm w-100 mt-2">Cerrar sesión</button>
+        </div>
+      </aside>
+
+      <!-- CONTENIDO PRINCIPAL -->
+      <main class="col-md-9 col-lg-10 p-4">
+
+        <!-- LOADING SPINNER -->
+        <div id="loading-spinner" class="loading-container d-none">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+          </div>
+          <p class="mt-2 text-muted">Cargando datos de Odoo...</p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!--  VISTA: DASHBOARD                           -->
+        <!-- ═══════════════════════════════════════════ -->
+        <div id="vista-dashboard">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Control de Asistencia</h1>
+            <button id="btn-pdf-dashboard" class="btn btn-danger">📄 Descargar Informe PDF</button>
+          </div>
+
+          <!-- KPIs de la API -->
+          <div class="row mb-4">
+            <div class="col-md-4">
+              <div class="card text-white bg-primary">
+                <div class="card-header">Salidas Anticipadas (semanal)</div>
+                <div class="card-body">
+                  <h2 class="text-center" id="kpi-salidas">0</h2>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card text-white bg-danger">
+                <div class="card-header">Errores de lectura</div>
+                <div class="card-body">
+                  <h2 class="text-center" id="kpi-incidencias">0</h2>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card text-white bg-success">
+                <div class="card-header">Asistencias (semanal)</div>
+                <div class="card-body">
+                  <h2 class="text-center" id="kpi-activos">0</h2>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- KPIs calculados con reduce/length (tutorial) -->
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <div class="card border-info">
+                <div class="card-header bg-info text-white">📐 KPIs calculados (reduce / length)</div>
+                <div class="card-body">
+                  <p><strong>Total de días registrados:</strong> <span id="kpi-total-dias">0</span></p>
+                  <p><strong>Total salidas (suma con reduce):</strong> <span id="kpi-total-salidas">0</span></p>
+                  <p><strong>Media de salidas/día:</strong> <span id="kpi-media-salidas">0</span></p>
+                  <p><strong>Día con más salidas:</strong> <span id="kpi-max-dia">-</span></p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">🔍 Filtro dinámico</div>
+                <div class="card-body">
+                  <label for="filtro-dashboard" class="form-label">Filtrar por día de la semana:</label>
+                  <select id="filtro-dashboard" class="form-select">
+                    <option value="todos">Todos los días</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gráfico (Chart.js) -->
+          <div class="card mb-4">
+            <div class="card-header">Análisis Visual</div>
+            <div class="card-body">
+              <div style="position: relative; height:40vh; width:100%">
+                <canvas id="miGrafico"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!--  VISTA: ALUMNOS                            -->
+        <!-- ═══════════════════════════════════════════ -->
+        <div id="vista-alumnos" class="d-none">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>Listado de Alumnos</h2>
+            <button id="btn-pdf-alumnos" class="btn btn-danger">📄 Descargar Informe PDF</button>
+          </div>
+
+          <!-- Ficha alumno -->
+          <div id="ficha-alumno" class="card d-none mb-3">
+            <div class="card-body">
+              <h4 id="ficha-nombre"></h4>
+              <p><strong>Grupo:</strong> <span id="ficha-grupo"></span></p>
+              <p><strong>NFC:</strong> <span id="ficha-nfc"></span></p>
+              <p><strong>Permiso recreo:</strong> <span id="ficha-recreo"></span></p>
+            </div>
+          </div>
+
+          <!-- KPIs calculados con reduce/length (tutorial) -->
+          <div class="row mb-3">
+            <div class="col-md-3">
+              <div class="card text-white bg-primary">
+                <div class="card-body text-center">
+                  <h5>Total Alumnos</h5>
+                  <h3 id="kpi-total-alumnos">0</h3>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card text-white bg-success">
+                <div class="card-body text-center">
+                  <h5>Con permiso recreo</h5>
+                  <h3 id="kpi-con-permiso">0</h3>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card text-white bg-warning text-dark">
+                <div class="card-body text-center">
+                  <h5>Total Faltas</h5>
+                  <h3 id="kpi-total-faltas">0</h3>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card text-white bg-info">
+                <div class="card-body text-center">
+                  <h5>Media Faltas/Alumno</h5>
+                  <h3 id="kpi-media-faltas">0</h3>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filtro dinámico (tutorial: filter) -->
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label for="filtro-alumnos" class="form-label">Filtrar por permiso recreo:</label>
+              <select id="filtro-alumnos" class="form-select">
+                <option value="todos">Todos</option>
+                <option value="con-permiso">Con permiso</option>
+                <option value="sin-permiso">Sin permiso</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Tabla -->
+          <div class="card">
+            <div class="card-body">
+              <table class="table table-striped text-center align-middle">
+                <thead class="table-dark">
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Transporte escolar</th>
+                    <th>Faltas Totales</th>
+                    <th>Faltas Semanales</th>
+                    <th>Salida Anticipada/Recreo</th>
+                  </tr>
+                </thead>
+                <tbody id="tabla-alumnos"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!--  VISTA: PROFESORES                         -->
+        <!-- ═══════════════════════════════════════════ -->
+        <div id="vista-profesores" class="d-none">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>Listado de Profesores</h2>
+            <button id="btn-pdf-profesores" class="btn btn-danger">📄 Descargar Informe PDF</button>
+          </div>
+
+          <!-- KPIs calculados con reduce/length (tutorial) -->
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <div class="card text-white bg-primary">
+                <div class="card-body text-center">
+                  <h5>Total Profesores</h5>
+                  <h3 id="kpi-total-profesores">0</h3>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card text-white bg-success">
+                <div class="card-body text-center">
+                  <h5>Con NFC vinculado</h5>
+                  <h3 id="kpi-profesores-nfc">0</h3>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card text-white bg-warning text-dark">
+                <div class="card-body text-center">
+                  <h5>Grupos únicos</h5>
+                  <h3 id="kpi-grupos-unicos">0</h3>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filtro dinámico (tutorial: filter) -->
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label for="filtro-profesores" class="form-label">Filtrar por grupo:</label>
+              <select id="filtro-profesores" class="form-select">
+                <option value="todos">Todos</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Tabla -->
+          <div class="card">
+            <div class="card-body">
+              <table class="table table-striped text-center align-middle">
+                <thead class="table-dark">
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Grupo</th>
+                    <th>NFC</th>
+                  </tr>
+                </thead>
+                <tbody id="tabla-profesores"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!--  VISTA: NFC                                -->
+        <!-- ═══════════════════════════════════════════ -->
+        <div id="vista-nfc" class="d-none">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>Vinculación NFC</h2>
+            <button id="btn-pdf-nfc" class="btn btn-danger">📄 Descargar Informe PDF</button>
+          </div>
+
+          <!-- Formulario vinculación -->
+          <div class="card mb-3">
+            <div class="card-body row g-3">
+              <div class="col-md-6">
+                <select id="select-usuario" class="form-select"></select>
+              </div>
+              <div class="col-md-4">
+                <input id="input-nfc" class="form-control" placeholder="UID tarjeta">
+              </div>
+              <div class="col-md-2">
+                <button id="btn-vincular" class="btn btn-primary w-100">Vincular</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- KPIs calculados con reduce/length (tutorial) -->
+          <div class="row mb-3">
+            <div class="col-md-3">
+              <div class="card text-white bg-primary">
+                <div class="card-body text-center">
+                  <h5>Total Usuarios</h5>
+                  <h3 id="kpi-total-usuarios">0</h3>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card text-white bg-success">
+                <div class="card-body text-center">
+                  <h5>Con NFC</h5>
+                  <h3 id="kpi-nfc-vinculados">0</h3>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card text-white bg-danger">
+                <div class="card-body text-center">
+                  <h5>Sin NFC</h5>
+                  <h3 id="kpi-nfc-no-vinculados">0</h3>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card text-white bg-info">
+                <div class="card-body text-center">
+                  <h5>% Vinculado</h5>
+                  <h3 id="kpi-nfc-porcentaje">0%</h3>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filtro dinámico (tutorial: filter) -->
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label for="filtro-nfc" class="form-label">Filtrar por rol:</label>
+              <select id="filtro-nfc" class="form-select">
+                <option value="todos">Todos</option>
+                <option value="estudiante">Estudiante</option>
+                <option value="profesor">Profesor</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Tabla -->
+          <div class="card">
+            <div class="card-body">
+              <table class="table table-striped text-center align-middle">
+                <thead class="table-dark">
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Rol</th>
+                    <th>NFC</th>
+                  </tr>
+                </thead>
+                <tbody id="tabla-nfc"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+</body>
+
+</html>
