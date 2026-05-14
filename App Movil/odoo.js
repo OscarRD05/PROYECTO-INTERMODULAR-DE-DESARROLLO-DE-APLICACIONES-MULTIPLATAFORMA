@@ -14,6 +14,9 @@ class OdooService {
         
         console.log(`Llamando a API: ${endpoint}`, params); // DEBUG
 
+        params = params || {};
+        params.db = this.db;
+
         const body = {
             jsonrpc: "2.0",
             params: params,

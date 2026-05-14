@@ -14,7 +14,6 @@ class NFCController(http.Controller):
 
     @http.route('/nfc/api/login', type='json', auth='none', cors='*', csrf=False)
     def api_login(self, **kwargs):
-        # En Odoo 18 con type='json', los parámetros vienen en kwargs si se envían como params: {}
         db = kwargs.get('db')
         login = kwargs.get('login')
         password = kwargs.get('password')
@@ -39,12 +38,12 @@ class NFCController(http.Controller):
             _logger.error("Error en login API: %s", str(e))
             return {"status": "error", "message": str(e)}
 
-    @http.route('/nfc/api/search', type='json', auth='user', cors='*', csrf=False)
+    @http.route('/nfc/api/search', type='json', auth='public', cors='*', csrf=False)
     def api_search(self, model, domain, fields, **kwargs):
         records = request.env[model].sudo().search_read(domain, fields)
         return {"status": "ok", "records": records}
 
-    @http.route('/nfc/api/log', type='json', auth='user', cors='*', csrf=False)
+    @http.route('/nfc/api/log', type='json', auth='public', cors='*', csrf=False)
     def api_log(self, alumno_id, tipo='entrada', **kwargs):
         log = request.env['nfc.registro_asistencia'].sudo().create({
             'alumno_id': alumno_id,
@@ -66,7 +65,7 @@ class NFCController(http.Controller):
             return {"status": "ok", "uid": uid, "alumno": alumno.nombre_completo}
         return {"status": "error", "message": "Alumno no encontrado"}
 
-    @http.route('/nfc/api/alumnos', type='json', auth='user', cors='*', csrf=False)
+    @http.route('/nfc/api/alumnos', type='json', auth='public', cors='*', csrf=False)
     def api_alumnos(self, **kwargs):
         Alumno = request.env['nfc.alumno'].sudo()
         Registro = request.env['nfc.registro_asistencia'].sudo()
@@ -94,7 +93,7 @@ class NFCController(http.Controller):
             })
         return {"status": "ok", "alumnos": resultado}
 
-    @http.route('/nfc/api/profesores', type='json', auth='user', cors='*', csrf=False)
+    @http.route('/nfc/api/profesores', type='json', auth='public', cors='*', csrf=False)
     def api_profesores(self, **kwargs):
         Profesor = request.env['nfc.profesor'].sudo()
         profesores = Profesor.search([])
@@ -109,7 +108,7 @@ class NFCController(http.Controller):
             })
         return {"status": "ok", "profesores": resultado}
 
-    @http.route('/nfc/api/dashboard', type='json', auth='user', cors='*', csrf=False)
+    @http.route('/nfc/api/dashboard', type='json', auth='public', cors='*', csrf=False)
     def api_dashboard(self, **kwargs):
         Registro = request.env['nfc.registro_asistencia'].sudo()
         hoy = datetime.now()
@@ -138,7 +137,7 @@ class NFCController(http.Controller):
             "grafica": grafica,
         }
 
-    @http.route('/nfc/api/vincular_nfc', type='json', auth='user', cors='*', csrf=False)
+    @http.route('/nfc/api/vincular_nfc', type='json', auth='public', cors='*', csrf=False)
     def api_vincular_nfc(self, tipo, registro_id, uid_nfc, **kwargs):
         if tipo == 'alumno': record = request.env['nfc.alumno'].sudo().browse(registro_id)
         elif tipo == 'profesor': record = request.env['nfc.profesor'].sudo().browse(registro_id)
@@ -148,7 +147,7 @@ class NFCController(http.Controller):
         record.write({'uid_tarjeta_rfid': uid_nfc})
         return {"status": "ok", "message": "NFC vinculado"}
 
-    @http.route('/nfc/api/toggle_permiso', type='json', auth='user', cors='*', csrf=False)
+    @http.route('/nfc/api/toggle_permiso', type='json', auth='public', cors='*', csrf=False)
     def api_toggle_permiso(self, alumno_id, **kwargs):
         alumno = request.env['nfc.alumno'].sudo().browse(alumno_id)
         if not alumno.exists(): return {"status": "error", "message": "No encontrado"}
