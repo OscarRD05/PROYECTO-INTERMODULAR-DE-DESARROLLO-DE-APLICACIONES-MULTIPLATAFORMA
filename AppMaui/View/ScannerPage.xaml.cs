@@ -14,11 +14,11 @@ public partial class ScannerPage : ContentPage
 
     private async void OnScanClicked(object sender, EventArgs e)
     {
-        StatusLabel.Text = "Esperando tarjeta NFC...";
-
-        await Task.Delay(2000);
-
-        await BuscarAlumnoPorNfc("123456");
+        await DisplayAlert(
+            "NFC",
+            "Aquí irá la lectura NFC real",
+            "OK"
+        );
     }
 
     private async void OnSearchClicked(object sender, EventArgs e)
@@ -36,11 +36,6 @@ public partial class ScannerPage : ContentPage
             return;
         }
 
-        await BuscarAlumnoManual(busqueda);
-    }
-
-    private async Task BuscarAlumnoManual(string busqueda)
-    {
         try
         {
             StatusLabel.Text = "Buscando alumno...";
@@ -81,15 +76,23 @@ public partial class ScannerPage : ContentPage
             );
 
             HttpResponseMessage response = await client.PostAsync(
-                $"{ODOO_URL}/nfc/api/search",
+                $"{ODOO_URL}/nfc/api/search_maui",
                 content
             );
 
             string responseText = await response.Content.ReadAsStringAsync();
 
-            using JsonDocument doc = JsonDocument.Parse(responseText);
+            await DisplayAlert(
+                "DEBUG",
+                responseText,
+                "OK"
+            );
 
-            JsonElement result = doc.RootElement.GetProperty("result");
+            return;
+
+            JsonDocument doc = JsonDocument.Parse(responseText);
+
+            JsonElement result = doc.RootElement;
 
             string status = result
                 .GetProperty("status")
@@ -133,8 +136,10 @@ public partial class ScannerPage : ContentPage
 
             if (alumno.TryGetProperty("curso_id", out JsonElement cursoElement))
             {
-                if (cursoElement.ValueKind == JsonValueKind.Array &&
-                    cursoElement.GetArrayLength() > 1)
+                if (
+                    cursoElement.ValueKind == JsonValueKind.Array &&
+                    cursoElement.GetArrayLength() > 1
+                )
                 {
                     curso = cursoElement[1].GetString() ?? "Sin curso";
                 }
@@ -155,116 +160,6 @@ public partial class ScannerPage : ContentPage
             );
         }
     }
-
-    // ═══════════════════════════════════════
-    // BUSCAR ALUMNO NFC
-    // ═══════════════════════════════════════
-
-    private async Task BuscarAlumnoPorNfc(string uid)
-    {
-        try
-        {
-            StatusLabel.Text = "Buscando NFC...";
-
-            using HttpClient client = new();
-
-            var body = new
-            {
-                jsonrpc = "2.0",
-                method = "call",
-                @params = new
-                {
-                    model = "nfc.alumno",
-                    domain = new object[]
-                    {
-                        new object[]
-                        {
-                            "uid_tarjeta_rfid",
-                            "=",
-                            uid
-                        }
-                    },
-                    fields = new string[]
-                    {
-                        "nombre_completo",
-                        "curso_id",
-                        "permiso_salida"
-                    }
-                }
-            };
-
-            string json = JsonSerializer.Serialize(body);
-
-            StringContent content = new(
-                json,
-                Encoding.UTF8,
-                "application/json"
-            );
-
-            HttpResponseMessage response = await client.PostAsync(
-                $"{ODOO_URL}/nfc/api/search",
-                content
-            );
-
-            string responseText = await response.Content.ReadAsStringAsync();
-
-            using JsonDocument doc = JsonDocument.Parse(responseText);
-
-            JsonElement result = doc.RootElement.GetProperty("result");
-
-            JsonElement records = result.GetProperty("records");
-
-            if (records.GetArrayLength() == 0)
-            {
-                await DisplayAlert(
-                    "No encontrado",
-                    "No existe alumno con ese NFC",
-                    "OK"
-                );
-
-                return;
-            }
-
-            JsonElement alumno = records[0];
-
-            string nombre = alumno
-                .GetProperty("nombre_completo")
-                .GetString() ?? "";
-
-            bool autorizado = alumno
-                .GetProperty("permiso_salida")
-                .GetBoolean();
-
-            string curso = "Sin curso";
-
-            if (alumno.TryGetProperty("curso_id", out JsonElement cursoElement))
-            {
-                if (cursoElement.ValueKind == JsonValueKind.Array &&
-                    cursoElement.GetArrayLength() > 1)
-                {
-                    curso = cursoElement[1].GetString() ?? "";
-                }
-            }
-
-            MostrarAlumno(
-                nombre,
-                curso,
-                autorizado
-            );
-        }
-        catch (Exception ex)
-        {
-            await DisplayAlert(
-                "Error",
-                ex.Message,
-                "OK"
-            );
-        }
-    }
-
-    // ═══════════════════════════════════════
-    // MOSTRAR ALUMNO
-    // ═══════════════════════════════════════
 
     private void MostrarAlumno(
         string nombre,
@@ -304,10 +199,6 @@ public partial class ScannerPage : ContentPage
 
         StatusLabel.Text = "Alumno encontrado";
     }
-
-    // ═══════════════════════════════════════
-    // LOGOUT
-    // ═══════════════════════════════════════
 
     private async void OnLogoutClicked(object sender, EventArgs e)
     {
