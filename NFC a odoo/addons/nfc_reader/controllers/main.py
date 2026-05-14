@@ -14,7 +14,6 @@ class NFCController(http.Controller):
 
     @http.route('/nfc/api/login', type='json', auth='none', cors='*', csrf=False)
     def api_login(self, **kwargs):
-        # En Odoo 18 con type='json', los parámetros vienen en kwargs si se envían como params: {}
         db = kwargs.get('db')
         login = kwargs.get('login')
         password = kwargs.get('password')
