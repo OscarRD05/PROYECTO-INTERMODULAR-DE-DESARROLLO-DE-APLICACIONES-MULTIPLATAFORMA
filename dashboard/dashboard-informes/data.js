@@ -2,9 +2,7 @@
 // OdooService - Clase para comunicarse con el controlador de Odoo
 // ═══════════════════════════════════════════════════════════════
 class OdooService {
-  constructor(baseUrl, db) {
-    this.useProxy = !baseUrl || !baseUrl.startsWith('http');
-    this.baseUrl = this.useProxy ? '' : baseUrl;
+  constructor(db) {
     this.db = db;
     this.uid = null;
     this.login_user = null;
@@ -12,7 +10,6 @@ class OdooService {
   }
 
   async callApi(endpoint, params = {}) {
-    const url = this.useProxy ? endpoint : `${this.baseUrl}${endpoint}`;
     params = params || {};
     params.db = this.db;
 
@@ -23,17 +20,11 @@ class OdooService {
     };
 
     try {
-      const fetchOptions = {
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
-      };
-
-      if (!this.useProxy) {
-        fetchOptions.mode = 'cors';
-      }
-
-      const response = await fetch(url, fetchOptions);
+      });
 
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
 
@@ -95,9 +86,10 @@ window.onload = () => {
   const savedConfig = localStorage.getItem('odoo_config');
   if (savedConfig) {
     const config = JSON.parse(savedConfig);
-    document.getElementById("login-url").value = config.url;
     document.getElementById("login-db").value = config.db;
     document.getElementById("login-user").value = config.user;
+  } else if (typeof APP_CONFIG !== 'undefined') {
+    document.getElementById("login-db").value = APP_CONFIG.ODOO_DB;
   }
 
   // Inicializar gráfico vacío (tutorial: inicializarGrafico)
@@ -108,7 +100,6 @@ window.onload = () => {
 // LOGIN
 // ═══════════════════════════════════════════════════════════════
 document.getElementById("btn-login").onclick = async () => {
-  const url = document.getElementById("login-url").value.trim();
   const db = document.getElementById("login-db").value.trim();
   const user = document.getElementById("login-user").value.trim();
   const pass = document.getElementById("login-pass").value;
@@ -123,10 +114,10 @@ document.getElementById("btn-login").onclick = async () => {
   document.getElementById("btn-login").disabled = true;
 
   try {
-    odoo = new OdooService(url, db);
+    odoo = new OdooService(db);
     await odoo.login(user, pass);
 
-    localStorage.setItem('odoo_config', JSON.stringify({ url, db, user }));
+    localStorage.setItem('odoo_config', JSON.stringify({ db, user }));
 
     loginOverlay.classList.add("d-none");
     appContainer.classList.remove("d-none");
@@ -363,7 +354,10 @@ function renderTablaProfesores(datos) {
     <tr>
       <td>${p.nombre}</td>
       <td>${p.grupo}</td>
-      <td>${p.nfc || "-"}</td>
+      <td>
+        <span data-nfc-id="profesor-${p.id}">${p.nfc || "-"}</span>
+        <button class="btn btn-sm btn-outline-secondary ms-1" onclick="editarNfc('profesor', ${p.id})">&#9998;</button>
+      </td>
     </tr>
   `).join("");
 }
@@ -377,7 +371,10 @@ function renderTablaNFC(datos) {
     <tr>
       <td>${u.nombre}</td>
       <td>${u.rol}</td>
-      <td>${u.nfc || "-"}</td>
+      <td>
+        <span data-nfc-id="${u.rol === 'Estudiante' ? 'alumno' : 'profesor'}-${u.id}">${u.nfc || "-"}</span>
+        <button class="btn btn-sm btn-outline-secondary ms-1" onclick="editarNfc('${u.rol === 'Estudiante' ? 'alumno' : 'profesor'}', ${u.id})">&#9998;</button>
+      </td>
     </tr>
   `).join("");
 
@@ -699,7 +696,13 @@ function descargarPDF(tipo) {
 // Permisos y NFC
 // ═══════════════════════════════════════════════════════════════
 
+let fichaAlumnoActual = null;
+let modalNfcTipo = null;
+let modalNfcId = null;
+let nfcPolling = false;
+
 window.verFichaAlumno = (a) => {
+  fichaAlumnoActual = a;
   const ficha = document.getElementById("ficha-alumno");
   document.getElementById("ficha-nombre").innerText = a.nombre;
   document.getElementById("ficha-grupo").innerText = a.grupo;
@@ -717,6 +720,91 @@ async function togglePermiso(id) {
     alert("Error actualizando permiso: " + error.message);
   }
 }
+
+function editarNfc(tipo, id) {
+  detenerLecturaNfc();
+  modalNfcTipo = tipo;
+  modalNfcId = id;
+  const span = document.querySelector(`[data-nfc-id="${tipo}-${id}"]`);
+  const uidActual = span ? span.innerText : '-';
+  document.getElementById('modal-nfc-nombre').innerText = `UID actual: ${uidActual}`;
+  document.getElementById('modal-nfc-input').value = uidActual !== '-' ? uidActual : '';
+  document.getElementById('modal-nfc-estado').innerText = '';
+  new bootstrap.Modal(document.getElementById('modal-editar-nfc')).show();
+}
+
+window.editarNfcAlumno = () => {
+  if (!fichaAlumnoActual) return;
+  detenerLecturaNfc();
+  modalNfcTipo = 'alumno';
+  modalNfcId = fichaAlumnoActual.id;
+  document.getElementById('modal-nfc-nombre').innerText = fichaAlumnoActual.nombre;
+  document.getElementById('modal-nfc-input').value = fichaAlumnoActual.nfc || '';
+  document.getElementById('modal-nfc-estado').innerText = '';
+  new bootstrap.Modal(document.getElementById('modal-editar-nfc')).show();
+};
+
+async function iniciarLecturaNfc() {
+  if (nfcPolling) return;
+  nfcPolling = true;
+  const estado = document.getElementById('modal-nfc-estado');
+  const btn = document.getElementById('modal-nfc-escanear');
+  const input = document.getElementById('modal-nfc-input');
+
+  btn.disabled = true;
+  btn.innerText = '⏳ Escaneando...';
+  estado.innerText = 'Acerca la tarjeta al lector NFC';
+
+  try {
+    const res = await fetch('/nfc/api/leer-uid');
+    const data = await res.json();
+    if (data.status === 'ok' && data.uid) {
+      input.value = data.uid;
+      estado.innerText = '¡Tarjeta leída!';
+      estado.className = 'text-success small';
+    } else {
+      estado.innerText = 'Tiempo agotado. Intenta de nuevo.';
+      estado.className = 'text-warning small';
+    }
+  } catch {
+    estado.innerText = 'Error al leer. Intenta de nuevo.';
+    estado.className = 'text-danger small';
+  } finally {
+    nfcPolling = false;
+    btn.disabled = false;
+    btn.innerText = '📡 Leer NFC';
+  }
+}
+
+function detenerLecturaNfc() {
+  nfcPolling = false;
+  const btn = document.getElementById('modal-nfc-escanear');
+  if (btn) {
+    btn.disabled = false;
+    btn.innerText = '📡 Leer NFC';
+  }
+}
+
+document.getElementById('modal-nfc-escanear').onclick = iniciarLecturaNfc;
+
+document.getElementById('modal-nfc-guardar').onclick = async () => {
+  const nuevoUid = document.getElementById('modal-nfc-input').value.trim();
+  if (!nuevoUid) {
+    if (!confirm('¿Dejar sin tarjeta NFC?')) return;
+  }
+
+  try {
+    await odoo.callApi('/nfc/api/vincular_nfc', {
+      tipo: modalNfcTipo,
+      registro_id: parseInt(modalNfcId),
+      uid_nfc: nuevoUid
+    });
+    bootstrap.Modal.getInstance(document.getElementById('modal-editar-nfc')).hide();
+    cargarTabla(vistaActual);
+  } catch (error) {
+    alert('Error actualizando UID: ' + error.message);
+  }
+};
 
 document.getElementById("btn-vincular").onclick = async () => {
   const selectVal = document.getElementById("select-usuario").value;
