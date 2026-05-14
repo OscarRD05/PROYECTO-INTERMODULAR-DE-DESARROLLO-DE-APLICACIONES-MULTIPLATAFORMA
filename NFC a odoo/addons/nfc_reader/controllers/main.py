@@ -1,6 +1,8 @@
 from odoo import http
 from odoo.http import request
 from datetime import datetime, timedelta
+from odoo.http import Response
+import json
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -43,6 +45,19 @@ class NFCController(http.Controller):
         records = request.env[model].sudo().search_read(domain, fields)
         return {"status": "ok", "records": records}
 
+    @http.route('/nfc/api/search_maui', type='json', auth='public', cors='*', csrf=False)
+    def api_search_maui(self, model, domain, fields, **kwargs):
+    
+        records = request.env[model].sudo().search_read(
+            domain,
+            fields
+        )
+    
+        return {
+            "status": "ok",
+            "records": records
+        }
+    
     @http.route('/nfc/api/log', type='json', auth='public', cors='*', csrf=False)
     def api_log(self, alumno_id, tipo='entrada', **kwargs):
         log = request.env['nfc.registro_asistencia'].sudo().create({
