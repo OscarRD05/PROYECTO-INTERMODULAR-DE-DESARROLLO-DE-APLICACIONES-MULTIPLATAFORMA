@@ -45,15 +45,51 @@ class NFCController(http.Controller):
         records = request.env[model].sudo().search_read(domain, fields)
         return {"status": "ok", "records": records}
 
-    @http.route('/nfc/api/search_maui', type='http', auth='public', cors='*', csrf=False, methods=['POST'])
+    @http.route(
+    '/nfc/api/search_maui',
+    type='http',
+    auth='public',
+    cors='*',
+    csrf=False,
+    methods=['POST']
+    )
     def api_search_maui(self, **kwargs):
     
-        data = json.loads(request.httprequest.data)
+        try:
+            data = json.loads(request.httprequest.data)
     
-        params = data.get("params", {})
+            params = data.get("params", {})
     
-        model = params.get("model")
-        domain
+            model = params.get("model")
+            domain = params.get("domain", [])
+            fields = params.get("fields", [])
+    
+            records = request.env[model].sudo().search_read(
+                domain,
+                fields
+            )
+    
+            response = {
+                "status": "ok",
+                "records": records
+            }
+    
+            return Response(
+                json.dumps(response),
+                content_type='application/json'
+            )
+    
+        except Exception as e:
+    
+            response = {
+                "status": "error",
+                "message": str(e)
+            }
+    
+            return Response(
+                json.dumps(response),
+                content_type='application/json'
+            )
     
     @http.route('/nfc/api/log', type='json', auth='public', cors='*', csrf=False)
     def api_log(self, alumno_id, tipo='entrada', **kwargs):
