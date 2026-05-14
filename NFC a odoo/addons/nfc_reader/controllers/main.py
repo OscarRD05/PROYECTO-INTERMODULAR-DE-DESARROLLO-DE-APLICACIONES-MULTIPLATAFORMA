@@ -38,7 +38,7 @@ class NFCController(http.Controller):
             _logger.error("Error en login API: %s", str(e))
             return {"status": "error", "message": str(e)}
 
-    @http.route('/nfc/api/search', type='json', auth='public', cors='*', csrf=False)
+    @http.route('/nfc/api/search', type='json', auth='user', cors='*', csrf=False)
     def api_search(self, model, domain, fields, **kwargs):
         records = request.env[model].sudo().search_read(domain, fields)
         return {"status": "ok", "records": records}
