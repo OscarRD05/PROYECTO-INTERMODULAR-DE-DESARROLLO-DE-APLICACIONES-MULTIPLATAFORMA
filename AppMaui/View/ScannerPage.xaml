@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<ContentPage
+    x:Class="App.View.ScannerPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Scanner"
+    BackgroundColor="#f4f4f9">
+
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <HorizontalStackLayout
+            Grid.Row="0"
+            Padding="20,20,20,10"
+            HorizontalOptions="Fill"
+            VerticalOptions="Center">
+
+            <Label
+                x:Name="WelcomeLabel"
+                FontAttributes="Bold"
+                FontSize="20"
+                HorizontalOptions="StartAndExpand"
+                Text="Hola Profesor" />
+
+            <Button
+                Text="Salir"
+                BackgroundColor="#dc3545"
+                TextColor="White"
+                CornerRadius="10"
+                Clicked="OnLogoutClicked" />
+
+        </HorizontalStackLayout>
+
+        <ScrollView Grid.Row="1">
+
+            <VerticalStackLayout
+                Padding="20"
+                Spacing="20">
+
+                <Label
+                    x:Name="StatusLabel"
+                    FontAttributes="Italic"
+                    FontSize="16"
+                    HorizontalOptions="Center"
+                    Text="Esperando acción..."
+                    TextColor="Gray" />
+
+                <Frame
+                    x:Name="AlumnoCard"
+                    IsVisible="False"
+                    BackgroundColor="White"
+                    BorderColor="#dddddd"
+                    CornerRadius="20"
+                    Padding="20">
+
+                    <VerticalStackLayout
+                        Spacing="15"
+                        HorizontalOptions="Center">
+
+                        <Frame
+                            WidthRequest="100"
+                            HeightRequest="100"
+                            CornerRadius="50"
+                            BackgroundColor="#007bff"
+                            Padding="0"
+                            HorizontalOptions="Center">
+
+                            <Label
+                                x:Name="InicialesLabel"
+                                Text="AA"
+                                FontSize="40"
+                                FontAttributes="Bold"
+                                TextColor="White"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center" />
+
+                        </Frame>
+
+                        <Label
+                            x:Name="NombreAlumnoLabel"
+                            FontSize="28"
+                            FontAttributes="Bold"
+                            HorizontalOptions="Center"
+                            Text="Alumno" />
+
+                        <Label
+                            x:Name="CursoAlumnoLabel"
+                            FontSize="18"
+                            HorizontalOptions="Center"
+                            TextColor="Gray"
+                            Text="Curso" />
+
+                        <Frame
+                            x:Name="EstadoFrame"
+                            CornerRadius="12"
+                            Padding="10">
+
+                            <Label
+                                x:Name="EstadoLabel"
+                                FontSize="20"
+                                FontAttributes="Bold"
+                                HorizontalOptions="Center"
+                                Text="AUTORIZADO"
+                                TextColor="White" />
+
+                        </Frame>
+
+                    </VerticalStackLayout>
+
+                </Frame>
+
+            </VerticalStackLayout>
+
+        </ScrollView>
+
+        <VerticalStackLayout
+            Grid.Row="2"
+            Padding="20"
+            Spacing="15">
+
+            <Button
+                x:Name="ScanButton"
+                Text="📡 ESCANEAR NFC"
+                HeightRequest="60"
+                FontAttributes="Bold"
+                FontSize="18"
+                BackgroundColor="#28a745"
+                TextColor="White"
+                CornerRadius="15"
+                Clicked="OnScanClicked" />
+
+            <Label
+                HorizontalOptions="Center"
+                Text="o búsqueda manual"
+                TextColor="Gray" />
+
+            <HorizontalStackLayout Spacing="10">
+
+                <Entry
+                    x:Name="BusquedaEntry"
+                    Placeholder="Buscar alumno..."
+                    HorizontalOptions="FillAndExpand"
+                    BackgroundColor="White"
+                    TextColor="Black" />
+
+                <Button
+                    Text="🔍"
+                    WidthRequest="60"
+                    BackgroundColor="#17a2b8"
+                    TextColor="White"
+                    CornerRadius="12"
+                    Clicked="OnSearchClicked" />
+
+            </HorizontalStackLayout>
+
+        </VerticalStackLayout>
+
+    </Grid>
+
+</ContentPage>

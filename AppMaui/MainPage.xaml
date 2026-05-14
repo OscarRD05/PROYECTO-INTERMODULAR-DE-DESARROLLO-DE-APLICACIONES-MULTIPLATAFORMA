@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="App.MainPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    BackgroundColor="#f4f4f9">
+
+    <ScrollView>
+
+        <VerticalStackLayout
+            Padding="30"
+            Spacing="20"
+            VerticalOptions="Center">
+
+            <Frame
+                Padding="30"
+                BackgroundColor="White"
+                BorderColor="#dddddd"
+                CornerRadius="20"
+                HasShadow="True">
+
+                <VerticalStackLayout Spacing="15">
+
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="40"
+                        HorizontalOptions="Center"
+                        Text="🔐" />
+
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="34"
+                        HorizontalOptions="Center"
+                        Text="Acceso" />
+
+                    <Label
+                        FontSize="18"
+                        HorizontalOptions="Center"
+                        Text="IES San Juan de la Rambla"
+                        TextColor="Gray" />
+
+                    <Entry
+                        x:Name="UserEntry"
+                        BackgroundColor="#fafafa"
+                        Placeholder="Usuario"
+                        TextColor="Black" />
+
+                    <Entry
+                        x:Name="PasswordEntry"
+                        BackgroundColor="#fafafa"
+                        IsPassword="True"
+                        Placeholder="Contraseña"
+                        TextColor="Black" />
+
+                    <Button
+                        x:Name="LoginButton"
+                        BackgroundColor="#007bff"
+                        CornerRadius="12"
+                        FontAttributes="Bold"
+                        HeightRequest="55"
+                        Text="ENTRAR"
+                        TextColor="White"
+                        Clicked="OnLoginClicked"/>
+
+                    <ActivityIndicator
+                        x:Name="LoadingIndicator"
+                        IsRunning="False"
+                        IsVisible="False"
+                        Color="#007bff" />
+
+                    <Label
+                        x:Name="ErrorLabel"
+                        FontAttributes="Bold"
+                        HorizontalTextAlignment="Center"
+                        TextColor="Red" />
+
+                </VerticalStackLayout>
+
+            </Frame>
+
+        </VerticalStackLayout>
+
+    </ScrollView>
+
+</ContentPage>
