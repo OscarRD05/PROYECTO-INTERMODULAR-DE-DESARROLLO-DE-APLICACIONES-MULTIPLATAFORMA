@@ -1,55 +1,46 @@
-using System.Text;
-using System.Text.Json;
+using App.Services;
 using Plugin.NFC;
 
 namespace App.View;
 
 public partial class ScannerPage : ContentPage
 {
-    private const string ODOO_URL = "http://10.102.6.178:8069";
+    private readonly OdooService _odoo = new();
+    private AlumnoResult? _alumnoActual;
 
     public ScannerPage()
     {
         InitializeComponent();
-
         StartNfc();
     }
 
-    private async void StartNfc()
+    private void StartNfc()
     {
         try
         {
             if (!CrossNFC.IsSupported)
             {
-                StatusLabel.Text = "NFC no soportado";
+                StatusLabel.Text = "NFC no soportado en este dispositivo";
                 return;
             }
 
             if (!CrossNFC.Current.IsAvailable)
             {
-                StatusLabel.Text = "NFC desactivado";
+                StatusLabel.Text = "NFC desactivado, usa busqueda manual";
                 return;
             }
 
             CrossNFC.Current.OnTagDiscovered += Current_OnTagDiscovered;
-
             CrossNFC.Current.StartListening();
-
             StatusLabel.Text = "Esperando tarjeta NFC...";
         }
         catch (Exception ex)
         {
-            await DisplayAlert(
-                "Error NFC",
-                ex.Message,
-                "OK"
-            );
+            StatusLabel.Text = "Error NFC: usa busqueda manual";
         }
     }
 
-    private async void Current_OnTagDiscovered(
-        ITagInfo tagInfo,
-        bool format)
+    private async void Current_OnTagDiscovered(ITagInfo tagInfo, bool format)
     {
         try
         {
@@ -58,7 +49,6 @@ public partial class ScannerPage : ContentPage
             await MainThread.InvokeOnMainThreadAsync(async () =>
             {
                 BusquedaEntry.Text = uid;
-
                 await BuscarAlumno(uid);
             });
         }
@@ -66,21 +56,23 @@ public partial class ScannerPage : ContentPage
         {
             await MainThread.InvokeOnMainThreadAsync(async () =>
             {
-                await DisplayAlert(
-                    "Error NFC",
-                    ex.Message,
-                    "OK"
-                );
+                await DisplayAlert("Error NFC", ex.Message, "OK");
             });
         }
     }
 
-    private async void OnBusquedaCompleted(
-        object sender,
-        EventArgs e)
+    private async void OnBusquedaCompleted(object sender, EventArgs e)
     {
         string texto = BusquedaEntry.Text?.Trim() ?? "";
+        if (string.IsNullOrWhiteSpace(texto))
+            return;
 
+        await BuscarAlumno(texto);
+    }
+
+    private async void OnBusquedaClicked(object sender, EventArgs e)
+    {
+        string texto = BusquedaEntry.Text?.Trim() ?? "";
         if (string.IsNullOrWhiteSpace(texto))
             return;
 
@@ -92,194 +84,204 @@ public partial class ScannerPage : ContentPage
         try
         {
             StatusLabel.Text = "Buscando alumno...";
+            LoadingIndicator.IsVisible = true;
+            LoadingIndicator.IsRunning = true;
+            RegistroStatusLabel.IsVisible = false;
 
-            HttpClientHandler handler = new HttpClientHandler();
+            _alumnoActual = await _odoo.BuscarAlumnoAsync(texto);
 
-            handler.UseCookies = true;
-
-            handler.CookieContainer = App.Cookies;
-
-            using HttpClient client = new(handler);
-
-            var body = new
-            {
-                jsonrpc = "2.0",
-                method = "call",
-                @params = new
-                {
-                    model = "nfc.alumno",
-                    method = "search_read",
-                    args = new object[]
-                    {
-                        new object[]
-                        {
-                            "|",
-                            new object[]
-                            {
-                                "nombre_completo",
-                                "ilike",
-                                texto
-                            },
-                            new object[]
-                            {
-                                "uid_tarjeta_rfid",
-                                "=",
-                                texto
-                            }
-                        }
-                    },
-                    kwargs = new
-                    {
-                        fields = new string[]
-                        {
-                            "nombre_completo",
-                            "curso_id",
-                            "permiso_salida"
-                        }
-                    }
-                }
-            };
-
-            string json = JsonSerializer.Serialize(body);
-
-            StringContent content = new(
-                json,
-                Encoding.UTF8,
-                "application/json"
-            );
-
-            HttpResponseMessage response = await client.PostAsync(
-                $"{ODOO_URL}/web/dataset/call_kw/nfc.alumno/search_read",
-                content
-            );
-
-            string responseText = await response.Content.ReadAsStringAsync();
-
-            JsonDocument doc = JsonDocument.Parse(responseText);
-
-            JsonElement result = doc
-                .RootElement
-                .GetProperty("result");
-
-            if (result.GetArrayLength() == 0)
+            if (_alumnoActual == null)
             {
                 AlumnoCard.IsVisible = false;
-
                 StatusLabel.Text = "Alumno no encontrado";
-
                 return;
             }
 
-            JsonElement alumno = result[0];
-
-            string nombre = alumno
-                .GetProperty("nombre_completo")
-                .GetString() ?? "";
-
-            bool autorizado = alumno
-                .GetProperty("permiso_salida")
-                .GetBoolean();
-
-            string curso = "Sin curso";
-
-            if (
-                alumno.TryGetProperty(
-                    "curso_id",
-                    out JsonElement cursoElement)
-                &&
-                cursoElement.ValueKind == JsonValueKind.Array
-                &&
-                cursoElement.GetArrayLength() > 1
-            )
-            {
-                curso = cursoElement[1].GetString() ?? "Sin curso";
-            }
-
-            MostrarAlumno(
-                nombre,
-                curso,
-                autorizado
-            );
-
+            MostrarAlumno(_alumnoActual);
             StatusLabel.Text = "Alumno encontrado";
         }
         catch (Exception ex)
         {
-            await DisplayAlert(
-                "Error",
-                ex.Message,
-                "OK"
-            );
+            await DisplayAlert("Error", ex.Message, "OK");
+            StatusLabel.Text = "Error al buscar";
+        }
+        finally
+        {
+            LoadingIndicator.IsRunning = false;
+            LoadingIndicator.IsVisible = false;
         }
     }
 
-    private void MostrarAlumno(
-        string nombre,
-        string curso,
-        bool autorizado)
+    private void MostrarAlumno(AlumnoResult alumno)
     {
         AlumnoCard.IsVisible = true;
+        NombreAlumnoLabel.Text = alumno.Nombre;
+        CursoAlumnoLabel.Text = alumno.Curso;
 
-        NombreAlumnoLabel.Text = nombre;
-
-        CursoAlumnoLabel.Text = curso;
-
-        string[] partes = nombre.Split(
-            ' ',
-            StringSplitOptions.RemoveEmptyEntries);
-
-        string iniciales = "?";
-
-        if (partes.Length > 0)
-        {
-            iniciales = partes[0][0].ToString();
-
-            if (partes.Length > 1)
-            {
-                iniciales += partes[^1][0];
-            }
-        }
-
+        string[] partes = alumno.Nombre.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        string iniciales = partes.Length > 1
+            ? partes[0][0].ToString() + partes[^1][0]
+            : partes.Length > 0 ? partes[0][0].ToString() : "?";
         InicialesLabel.Text = iniciales.ToUpper();
 
-        if (autorizado)
+        if (alumno.PermisoSalida)
         {
-            EstadoFrame.BackgroundColor =
-                Color.FromArgb("#28a745");
-
+            EstadoFrame.BackgroundColor = Color.FromArgb("#28a745");
             EstadoLabel.Text = "AUTORIZADO";
+            BtnSalidaRecreo.IsVisible = true;
         }
         else
         {
-            EstadoFrame.BackgroundColor =
-                Color.FromArgb("#dc3545");
-
+            EstadoFrame.BackgroundColor = Color.FromArgb("#dc3545");
             EstadoLabel.Text = "DENEGADO";
+            BtnSalidaRecreo.IsVisible = false;
         }
     }
 
-    private async void OnLogoutClicked(
-        object sender,
-        EventArgs e)
+    private async Task RegistrarAsistencia(string tipo, string mensajeExito)
     {
-        bool salir = await DisplayAlert(
-            "Salir",
-            "¿Cerrar sesión?",
-            "Sí",
-            "No"
-        );
+        if (_alumnoActual == null)
+        {
+            await DisplayAlert("Error", "Busca un alumno primero", "OK");
+            return;
+        }
+
+        try
+        {
+            LoadingIndicator.IsVisible = true;
+            LoadingIndicator.IsRunning = true;
+
+            bool ok = await _odoo.RegistrarAsistenciaAsync(_alumnoActual.Id, tipo);
+
+            RegistroStatusLabel.IsVisible = true;
+
+            if (ok)
+            {
+                RegistroStatusLabel.Text = mensajeExito;
+                RegistroStatusLabel.TextColor = Colors.Green;
+            }
+            else
+            {
+                RegistroStatusLabel.Text = "Error al registrar";
+                RegistroStatusLabel.TextColor = Colors.Red;
+            }
+        }
+        catch (Exception ex)
+        {
+            RegistroStatusLabel.IsVisible = true;
+            RegistroStatusLabel.Text = $"Error: {ex.Message}";
+            RegistroStatusLabel.TextColor = Colors.Red;
+        }
+        finally
+        {
+            LoadingIndicator.IsRunning = false;
+            LoadingIndicator.IsVisible = false;
+        }
+    }
+
+    private async void OnRegistrarEntrada(object sender, EventArgs e)
+        => await RegistrarAsistencia("entrada", "Entrada registrada");
+
+    private async void OnRegistrarSalida(object sender, EventArgs e)
+        => await RegistrarAsistencia("salida", "Salida registrada");
+
+    private async void OnRegistrarSalidaRecreo(object sender, EventArgs e)
+        => await RegistrarAsistencia("salida_recreo", "Salida recreo registrada");
+
+    private async void OnRegistrarSalidaAnticipada(object sender, EventArgs e)
+    {
+        if (_alumnoActual == null)
+        {
+            await DisplayAlert("Error", "Busca un alumno primero", "OK");
+            return;
+        }
+
+        string motivo = await DisplayPromptAsync(
+            "Salida Anticipada",
+            "Motivo de la salida (opcional):",
+            "Registrar",
+            "Cancelar");
+
+        if (motivo == null)
+            return;
+
+        try
+        {
+            LoadingIndicator.IsVisible = true;
+            LoadingIndicator.IsRunning = true;
+
+            bool ok = await _odoo.RegistrarSalidaAnticipadaAsync(
+                _alumnoActual.Id, motivo ?? "");
+
+            RegistroStatusLabel.IsVisible = true;
+
+            if (ok)
+            {
+                RegistroStatusLabel.Text = "Salida anticipada registrada";
+                RegistroStatusLabel.TextColor = Colors.Green;
+            }
+            else
+            {
+                RegistroStatusLabel.Text = "Error al registrar";
+                RegistroStatusLabel.TextColor = Colors.Red;
+            }
+        }
+        catch (Exception ex)
+        {
+            RegistroStatusLabel.IsVisible = true;
+            RegistroStatusLabel.Text = $"Error: {ex.Message}";
+            RegistroStatusLabel.TextColor = Colors.Red;
+        }
+        finally
+        {
+            LoadingIndicator.IsRunning = false;
+            LoadingIndicator.IsVisible = false;
+        }
+    }
+
+    private async void OnSettingsClicked(object sender, EventArgs e)
+    {
+        await Navigation.PushAsync(new SettingsPage());
+    }
+
+    private async void OnLogoutClicked(object sender, EventArgs e)
+    {
+        bool salir = await DisplayAlert("Salir", "Cerrar sesion?", "Si", "No");
 
         if (salir)
         {
-            try
+            try { CrossNFC.Current.StopListening(); } catch { }
+
+            App.LoggedInUid = null;
+            await Navigation.PopAsync();
+        }
+    }
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+
+        try
+        {
+            if (CrossNFC.IsSupported && CrossNFC.Current.IsAvailable)
+            {
+                CrossNFC.Current.StartListening();
+            }
+        }
+        catch { }
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+
+        try
+        {
+            if (CrossNFC.IsSupported)
             {
                 CrossNFC.Current.StopListening();
             }
-            catch
-            {
-            }
-
-            await Navigation.PopAsync();
         }
+        catch { }
     }
 }

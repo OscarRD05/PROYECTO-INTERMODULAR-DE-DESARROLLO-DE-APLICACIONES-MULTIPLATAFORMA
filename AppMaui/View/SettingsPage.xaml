@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="App.View.SettingsPage"
+    BackgroundColor="#f5f5f5"
+    Title="Configuración">
+
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="20"
+            Spacing="20">
+
+            <Label
+                Text="Configuración"
+                FontSize="32"
+                FontAttributes="Bold"
+                HorizontalOptions="Center"
+                TextColor="#222" />
+
+            <Frame
+                CornerRadius="16"
+                Padding="20"
+                BackgroundColor="White"
+                BorderColor="#dddddd">
+
+                <VerticalStackLayout Spacing="15">
+
+                    <Label
+                        Text="Servidor Odoo"
+                        FontSize="18"
+                        FontAttributes="Bold"
+                        TextColor="#333" />
+
+                    <Entry
+                        x:Name="UrlEntry"
+                        Placeholder="http://IP:8069"
+                        Keyboard="Url"
+                        BackgroundColor="#fafafa"
+                        TextColor="Black" />
+
+                    <Label
+                        Text="Base de datos"
+                        FontSize="18"
+                        FontAttributes="Bold"
+                        TextColor="#333" />
+
+                    <Entry
+                        x:Name="DbEntry"
+                        Placeholder="Nombre de la base de datos"
+                        BackgroundColor="#fafafa"
+                        TextColor="Black" />
+
+                    <Button
+                        x:Name="TestButton"
+                        Text="Probar conexión"
+                        BackgroundColor="#17a2b8"
+                        TextColor="White"
+                        CornerRadius="12"
+                        HeightRequest="50"
+                        Clicked="OnTestConnection" />
+
+                    <Label
+                        x:Name="TestResultLabel"
+                        FontSize="14"
+                        HorizontalOptions="Center" />
+
+                    <Button
+                        Text="Guardar"
+                        BackgroundColor="#28a745"
+                        TextColor="White"
+                        CornerRadius="12"
+                        HeightRequest="50"
+                        Clicked="OnSave" />
+
+                    <Label
+                        x:Name="SaveResultLabel"
+                        FontSize="14"
+                        HorizontalOptions="Center"
+                        TextColor="Green" />
+
+                </VerticalStackLayout>
+
+            </Frame>
+
+            <Button
+                Text="Volver"
+                BackgroundColor="#6c757d"
+                TextColor="White"
+                CornerRadius="12"
+                HeightRequest="50"
+                Clicked="OnBack" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

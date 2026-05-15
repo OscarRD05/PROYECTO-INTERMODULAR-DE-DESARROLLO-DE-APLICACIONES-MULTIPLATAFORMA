@@ -1,13 +1,11 @@
-﻿using System.Text;
-using System.Text.Json;
+﻿using App.Services;
 using App.View;
 
 namespace App;
 
 public partial class MainPage : ContentPage
 {
-    private const string ODOO_URL = "http://10.102.7.216:8069";
-    private const string DATABASE = "prueba";
+    private readonly OdooService _odoo = new();
 
     public MainPage()
     {
@@ -21,10 +19,18 @@ public partial class MainPage : ContentPage
         string usuario = UserEntry.Text?.Trim() ?? "";
         string password = PasswordEntry.Text ?? "";
 
-        if (string.IsNullOrWhiteSpace(usuario) ||
-            string.IsNullOrWhiteSpace(password))
+        if (string.IsNullOrWhiteSpace(usuario) || string.IsNullOrWhiteSpace(password))
         {
-            ErrorLabel.Text = "Introduce usuario y contraseña";
+            ErrorLabel.Text = "Introduce usuario y contrasena";
+            return;
+        }
+
+        string url = App.OdooUrl;
+        string db = App.OdooDb;
+
+        if (string.IsNullOrWhiteSpace(url) || string.IsNullOrWhiteSpace(db))
+        {
+            ErrorLabel.Text = "Configura el servidor en Config";
             return;
         }
 
@@ -32,64 +38,33 @@ public partial class MainPage : ContentPage
         {
             LoadingIndicator.IsVisible = true;
             LoadingIndicator.IsRunning = true;
-
             LoginButton.IsEnabled = false;
 
-            using HttpClient client = new();
+            var (ok, uid, error) = await _odoo.LoginAsync(db, usuario, password);
 
-            var body = new
+            if (ok)
             {
-                jsonrpc = "2.0",
-                method = "call",
-                @params = new
-                {
-                    db = DATABASE,
-                    login = usuario,
-                    password = password
-                }
-            };
-
-            string json = JsonSerializer.Serialize(body);
-
-            StringContent content = new(
-                json,
-                Encoding.UTF8,
-                "application/json"
-            );
-
-            HttpResponseMessage response = await client.PostAsync(
-                $"{ODOO_URL}/nfc/api/login",
-                content
-            );
-
-            string responseText = await response.Content.ReadAsStringAsync();
-
-            using JsonDocument doc = JsonDocument.Parse(responseText);
-
-            if (doc.RootElement.TryGetProperty("result", out JsonElement result))
-            {
-                string status = result.GetProperty("status").GetString() ?? "";
-
-                if (status == "ok")
-                {
-                    await Navigation.PushAsync(new ScannerPage());
-
-                    return;
-                }
+                App.LoggedInUid = uid;
+                await Navigation.PushAsync(new ScannerPage());
+                return;
             }
 
-            ErrorLabel.Text = "Usuario o contraseña incorrectos";
+            ErrorLabel.Text = string.IsNullOrWhiteSpace(error) ? "Usuario o contrasena incorrectos" : error;
         }
         catch (Exception ex)
         {
-            ErrorLabel.Text = ex.Message;
+            ErrorLabel.Text = $"Error: {ex.Message}";
         }
         finally
         {
             LoadingIndicator.IsRunning = false;
             LoadingIndicator.IsVisible = false;
-
             LoginButton.IsEnabled = true;
         }
+    }
+
+    private async void OnSettingsClicked(object sender, EventArgs e)
+    {
+        await Navigation.PushAsync(new SettingsPage());
     }
 }

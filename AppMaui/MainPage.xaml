@@ -62,6 +62,15 @@
                         TextColor="White"
                         Clicked="OnLoginClicked"/>
 
+                    <Button
+                        x:Name="SettingsButton"
+                        BackgroundColor="#6c757d"
+                        CornerRadius="12"
+                        HeightRequest="45"
+                        Text="Configuracion"
+                        TextColor="White"
+                        Clicked="OnSettingsClicked"/>
+
                     <ActivityIndicator
                         x:Name="LoadingIndicator"
                         IsRunning="False"

@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8" ?>
-
 <ContentPage
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
@@ -8,18 +7,32 @@
     Title="Scanner NFC">
 
     <ScrollView>
-
         <VerticalStackLayout
             Padding="20"
-            Spacing="20">
+            Spacing="16">
 
-            <Button
-                Text="Salir"
-                Clicked="OnLogoutClicked"
-                HorizontalOptions="End"
-                BackgroundColor="#dc3545"
-                TextColor="White"
-                WidthRequest="100" />
+            <HorizontalStackLayout
+                HorizontalOptions="FillAndExpand"
+                Spacing="10">
+
+                <Button
+                    Text="Config"
+                    Clicked="OnSettingsClicked"
+                    BackgroundColor="#6c757d"
+                    TextColor="White"
+                    CornerRadius="12"
+                    WidthRequest="100" />
+
+                <Button
+                    Text="Salir"
+                    Clicked="OnLogoutClicked"
+                    BackgroundColor="#dc3545"
+                    TextColor="White"
+                    CornerRadius="12"
+                    WidthRequest="100"
+                    HorizontalOptions="EndAndExpand" />
+
+            </HorizontalStackLayout>
 
             <Label
                 Text="Scanner NFC"
@@ -35,11 +48,24 @@
                 BackgroundColor="White"
                 TextColor="Black" />
 
+            <Button
+                Text="Buscar"
+                BackgroundColor="#007bff"
+                TextColor="White"
+                CornerRadius="12"
+                Clicked="OnBusquedaClicked" />
+
             <Label
                 x:Name="StatusLabel"
                 Text="Esperando tarjeta..."
                 HorizontalOptions="Center"
                 TextColor="#666" />
+
+            <ActivityIndicator
+                x:Name="LoadingIndicator"
+                IsRunning="False"
+                IsVisible="False"
+                Color="#007bff" />
 
             <Frame
                 x:Name="AlumnoCard"
@@ -88,12 +114,75 @@
 
                     </Frame>
 
+                    <Label
+                        Text="Registrar asistencia"
+                        FontSize="18"
+                        FontAttributes="Bold"
+                        HorizontalOptions="Center"
+                        TextColor="#333"
+                        Margin="0,10,0,5" />
+
+                    <HorizontalStackLayout
+                        HorizontalOptions="Center"
+                        Spacing="10">
+
+                        <Button
+                            x:Name="BtnEntrada"
+                            Text="Entrada"
+                            BackgroundColor="#28a745"
+                            TextColor="White"
+                            CornerRadius="12"
+                            WidthRequest="130"
+                            Clicked="OnRegistrarEntrada" />
+
+                        <Button
+                            x:Name="BtnSalida"
+                            Text="Salida"
+                            BackgroundColor="#fd7e14"
+                            TextColor="White"
+                            CornerRadius="12"
+                            WidthRequest="130"
+                            Clicked="OnRegistrarSalida" />
+
+                    </HorizontalStackLayout>
+
+                    <HorizontalStackLayout
+                        HorizontalOptions="Center"
+                        Spacing="10">
+
+                        <Button
+                            x:Name="BtnSalidaRecreo"
+                            Text="Salida Recreo"
+                            BackgroundColor="#17a2b8"
+                            TextColor="White"
+                            CornerRadius="12"
+                            WidthRequest="130"
+                            IsVisible="False"
+                            Clicked="OnRegistrarSalidaRecreo" />
+
+                        <Button
+                            x:Name="BtnSalidaAnticipada"
+                            Text="Salida Anticipada"
+                            BackgroundColor="#dc3545"
+                            TextColor="White"
+                            CornerRadius="12"
+                            WidthRequest="130"
+                            Clicked="OnRegistrarSalidaAnticipada" />
+
+                    </HorizontalStackLayout>
+
+                    <Label
+                        x:Name="RegistroStatusLabel"
+                        FontSize="14"
+                        HorizontalOptions="Center"
+                        TextColor="#28a745"
+                        IsVisible="False" />
+
                 </VerticalStackLayout>
 
             </Frame>
 
         </VerticalStackLayout>
-
     </ScrollView>
 
 </ContentPage>

@@ -33,6 +33,7 @@ class RegistroAsistencia(models.Model):
         [
             ("entrada", "Entrada"),
             ("salida", "Salida"),
+            ("salida_recreo", "Salida Recreo"),
             ("salida_anticipada", "Salida Anticipada"),
         ],
         string="Tipo",
