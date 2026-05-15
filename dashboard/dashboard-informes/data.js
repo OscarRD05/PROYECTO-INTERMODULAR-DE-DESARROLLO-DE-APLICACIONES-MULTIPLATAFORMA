@@ -63,6 +63,7 @@ let datosGrafica = [];      // [{dia, valor}] — datos de la gráfica del dashb
 let datosAlumnos = [];      // array de alumnos sin filtrar
 let datosProfesores = [];   // array de profesores sin filtrar
 let datosUsuarios = [];     // alumnos + profesores combinados para NFC
+let datosFaltas = [];       // registros de asistencia sin filtrar
 
 // Datos filtrados (los que se muestran actualmente en tabla y gráfico)
 let datosActuales = [];
@@ -148,14 +149,16 @@ const vistas = {
   dashboard: document.getElementById("vista-dashboard"),
   alumnos: document.getElementById("vista-alumnos"),
   profesores: document.getElementById("vista-profesores"),
-  nfc: document.getElementById("vista-nfc")
+  nfc: document.getElementById("vista-nfc"),
+  faltas: document.getElementById("vista-faltas")
 };
 
 const botonesNav = {
   dashboard: document.getElementById("btn-dashboard"),
   alumnos: document.getElementById("btn-alumnos"),
   profesores: document.getElementById("btn-profesores"),
-  nfc: document.getElementById("btn-nfc")
+  nfc: document.getElementById("btn-nfc"),
+  faltas: document.getElementById("btn-faltas")
 };
 
 function ocultarVistas() {
@@ -178,6 +181,7 @@ botonesNav.dashboard.onclick = (e) => { e.preventDefault(); cargarTabla('dashboa
 botonesNav.alumnos.onclick = (e) => { e.preventDefault(); cargarTabla('alumnos'); };
 botonesNav.profesores.onclick = (e) => { e.preventDefault(); cargarTabla('profesores'); };
 botonesNav.nfc.onclick = (e) => { e.preventDefault(); cargarTabla('nfc'); };
+botonesNav.faltas.onclick = (e) => { e.preventDefault(); cargarTabla('faltas'); };
 
 // ═══════════════════════════════════════════════════════════════
 // cargarTabla — Carga datos y rellena tabla HTML por DOM
@@ -241,6 +245,14 @@ async function cargarTabla(tipo) {
 
       calcularKPIs(datosActuales, 'nfc');
       renderTablaNFC(datosActuales);
+
+    } else if (tipo === 'faltas') {
+      const data = await odoo.callApi('/nfc/api/faltas');
+      datosFaltas = data.faltas;
+      datosActuales = [...datosFaltas];
+
+      calcularKPIs(datosActuales, 'faltas');
+      renderTablaFaltas(datosActuales);
     }
 
   } catch (error) {
@@ -318,6 +330,18 @@ function calcularKPIs(datos, tipo) {
     // Porcentaje vinculado — .reduce() para contar, luego calcular %
     const porcentaje = datos.length > 0 ? ((vinculados / datos.length) * 100).toFixed(1) : 0;
     document.getElementById("kpi-nfc-porcentaje").innerText = porcentaje + "%";
+
+  } else if (tipo === 'faltas') {
+    document.getElementById("kpi-faltas-total").innerText = datos.length;
+
+    const justificados = datos.filter(r => r.justificado).length;
+    document.getElementById("kpi-faltas-justificados").innerText = justificados;
+
+    const noJustificados = datos.filter(r => !r.justificado).length;
+    document.getElementById("kpi-faltas-no-justificados").innerText = noJustificados;
+
+    const porcentaje = datos.length > 0 ? ((justificados / datos.length) * 100).toFixed(1) : 0;
+    document.getElementById("kpi-faltas-porcentaje").innerText = porcentaje + "%";
   }
 }
 
@@ -377,6 +401,26 @@ function renderTablaNFC(datos) {
     <option value="${u.rol === 'Estudiante' ? 'alumno' : 'profesor'}:${u.id}">
       ${u.nombre} (${u.rol})
     </option>
+  `).join("");
+}
+
+function renderTablaFaltas(datos) {
+  const tbody = document.getElementById("tabla-faltas");
+  const tipoLabel = { 'entrada': 'Entrada', 'salida': 'Salida', 'salida_anticipada': 'Salida Anticipada' };
+  tbody.innerHTML = datos.map(r => `
+    <tr>
+      <td>${r.alumno}</td>
+      <td>${r.fecha_hora}</td>
+      <td>${tipoLabel[r.tipo] || r.tipo}</td>
+      <td>
+        <div class="form-check form-switch d-inline-block">
+          <input class="form-check-input" type="checkbox" ${r.justificado ? 'checked' : ''}
+            onchange="toggleJustificadoFaltas(${r.id}, this.checked)">
+        </div>
+        ${r.justificado ? '<span class="badge bg-success">Sí</span>' : '<span class="badge bg-danger">No</span>'}
+      </td>
+      <td>${r.motivo || '-'}</td>
+    </tr>
   `).join("");
 }
 
@@ -441,6 +485,29 @@ function aplicarFiltroNFC() {
   }
   calcularKPIs(datosActuales, 'nfc');
   renderTablaNFC(datosActuales);
+}
+
+// --- Filtro Faltas: por tipo y justificación ---
+document.getElementById("filtro-faltas-tipo").addEventListener("change", aplicarFiltroFaltas);
+document.getElementById("filtro-faltas-justificado").addEventListener("change", aplicarFiltroFaltas);
+
+function aplicarFiltroFaltas() {
+  const tipo = document.getElementById("filtro-faltas-tipo").value;
+  const justificado = document.getElementById("filtro-faltas-justificado").value;
+
+  datosActuales = [...datosFaltas];
+
+  if (tipo !== "todos") {
+    datosActuales = datosActuales.filter(r => r.tipo === tipo);
+  }
+  if (justificado === "justificado") {
+    datosActuales = datosActuales.filter(r => r.justificado === true);
+  } else if (justificado === "no-justificado") {
+    datosActuales = datosActuales.filter(r => r.justificado === false);
+  }
+
+  calcularKPIs(datosActuales, 'faltas');
+  renderTablaFaltas(datosActuales);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -572,6 +639,7 @@ document.getElementById("btn-pdf-dashboard").addEventListener("click", () => des
 document.getElementById("btn-pdf-alumnos").addEventListener("click", () => descargarPDF('alumnos'));
 document.getElementById("btn-pdf-profesores").addEventListener("click", () => descargarPDF('profesores'));
 document.getElementById("btn-pdf-nfc").addEventListener("click", () => descargarPDF('nfc'));
+document.getElementById("btn-pdf-faltas").addEventListener("click", () => descargarPDF('faltas'));
 
 /**
  * descargarPDF — Genera un informe PDF con jsPDF
@@ -672,6 +740,25 @@ function descargarPDF(tipo) {
     columnas = ["Nombre", "Rol", "NFC"];
     filas = datosActuales.map(u => [u.nombre, u.rol, u.nfc || "-"]);
     startY = 50;
+
+  } else if (tipo === 'faltas') {
+    titulo = "Informe de Faltas";
+    doc.setFontSize(20);
+    doc.text(titulo, 105, 20, { align: "center" });
+    doc.setFontSize(12);
+    doc.text("Fecha: " + new Date().toLocaleDateString(), 10, 30);
+
+    const totalF = document.getElementById("kpi-faltas-total").innerText;
+    const justif = document.getElementById("kpi-faltas-justificados").innerText;
+    const noJustif = document.getElementById("kpi-faltas-no-justificados").innerText;
+    const porcF = document.getElementById("kpi-faltas-porcentaje").innerText;
+    doc.setFontSize(11);
+    doc.text(`Total: ${totalF}  |  Justificados: ${justif}  |  No justificados: ${noJustif}  |  %: ${porcF}`, 10, 42);
+
+    const tipoLabel = { 'entrada': 'Entrada', 'salida': 'Salida', 'salida_anticipada': 'Salida Anticipada' };
+    columnas = ["Alumno", "Fecha", "Tipo", "Justificado", "Motivo"];
+    filas = datosActuales.map(r => [r.alumno, r.fecha_hora, tipoLabel[r.tipo] || r.tipo, r.justificado ? "Sí" : "No", r.motivo || "-"]);
+    startY = 50;
   }
 
   // Generar tabla con autoTable (patrón del tutorial)
@@ -756,6 +843,19 @@ async function toggleJustificado(registroId, justificado) {
     if (fichaAlumnoActual) {
       await cargarRegistrosAlumno(fichaAlumnoActual.id);
     }
+  }
+}
+
+async function toggleJustificadoFaltas(registroId, justificado) {
+  try {
+    await odoo.callApi('/nfc/api/justificar_falta', {
+      registro_id: registroId,
+      justificado: justificado
+    });
+    await cargarTabla('faltas');
+  } catch (error) {
+    alert("Error justificando falta: " + error.message);
+    await cargarTabla('faltas');
   }
 }
 

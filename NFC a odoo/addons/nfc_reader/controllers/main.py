@@ -189,3 +189,17 @@ class NFCController(http.Controller):
             vals['profesor_id'] = profesor_id
         record = request.env['nfc.registro_asistencia'].sudo().create(vals)
         return {"status": "ok", "id": record.id}
+
+    @http.route('/nfc/api/faltas', type='json', auth='public', cors='*', csrf=False)
+    def api_faltas(self, **kwargs):
+        Registro = request.env['nfc.registro_asistencia'].sudo()
+        registros = Registro.search([], order='fecha_hora desc', limit=200)
+        resultado = [{
+            'id': r.id,
+            'alumno': r.alumno_id.nombre_completo if r.alumno_id else 'Desconocido',
+            'fecha_hora': r.fecha_hora.strftime('%Y-%m-%d %H:%M'),
+            'tipo': r.tipo,
+            'justificado': r.justificado,
+            'motivo': r.motivo or '',
+        } for r in registros]
+        return {"status": "ok", "faltas": resultado}
