@@ -348,7 +348,6 @@ function renderTablaAlumnos(datos) {
           ${a.nombre}
         </button>
       </td>
-      <td>${a.recreo ? "Sí" : "No"}</td>
       <td>
         <label class="switch">
           <input type="checkbox" ${a.recreo ? "checked" : ""} onchange="togglePermiso(${a.id})">
