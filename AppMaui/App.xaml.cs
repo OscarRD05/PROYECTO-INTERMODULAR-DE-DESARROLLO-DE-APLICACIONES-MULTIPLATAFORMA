@@ -18,11 +18,13 @@ public partial class App : Application
         set => Preferences.Default.Set("odoo_db", value);
     }
 
-    public static int? LoggedInUid
+    public static int LoggedInUid
     {
-        get => Preferences.Default.Get("logged_in_uid", (int?)null);
+        get => Preferences.Default.Get("logged_in_uid", -1);
         set => Preferences.Default.Set("logged_in_uid", value);
     }
+
+    public static bool IsLoggedIn => LoggedInUid > 0;
 
     public App()
     {

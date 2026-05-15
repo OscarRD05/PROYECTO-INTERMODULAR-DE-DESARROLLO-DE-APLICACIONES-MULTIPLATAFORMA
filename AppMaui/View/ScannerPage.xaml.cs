@@ -246,7 +246,7 @@ public partial class ScannerPage : ContentPage
         {
             try { CrossNFC.Current.StopListening(); } catch { }
 
-            App.LoggedInUid = null;
+            App.LoggedInUid = -1;
             await Navigation.PopAsync();
         }
     }
