@@ -118,12 +118,6 @@ public partial class ScannerPage : ContentPage
         NombreAlumnoLabel.Text = alumno.Nombre;
         CursoAlumnoLabel.Text = alumno.Curso;
 
-        string[] partes = alumno.Nombre.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        string iniciales = partes.Length > 1
-            ? partes[0][0].ToString() + partes[^1][0]
-            : partes.Length > 0 ? partes[0][0].ToString() : "?";
-        InicialesLabel.Text = iniciales.ToUpper();
-
         if (alumno.PermisoSalida)
         {
             EstadoFrame.BackgroundColor = Color.FromArgb("#28a745");

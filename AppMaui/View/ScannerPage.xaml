@@ -80,13 +80,6 @@
                     HorizontalOptions="Center">
 
                     <Label
-                        x:Name="InicialesLabel"
-                        FontSize="26"
-                        FontAttributes="Bold"
-                        HorizontalOptions="Center"
-                        TextColor="#333" />
-
-                    <Label
                         x:Name="NombreAlumnoLabel"
                         FontSize="24"
                         FontAttributes="Bold"
