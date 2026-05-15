@@ -185,8 +185,8 @@ class NFCController(http.Controller):
         inicio_semana = hoy - timedelta(days=hoy.weekday())
         inicio_semana = inicio_semana.replace(hour=0, minute=0, second=0, microsecond=0)
 
-        salidas_semana = Registro.search_count([('tipo', '=', 'salida'), ('fecha_hora', '>=', inicio_semana.strftime('%Y-%m-%d %H:%M:%S'))])
-        incidencias = Registro.search_count([('tipo', '=', 'salida'), ('justificado', '=', False), ('fecha_hora', '>=', inicio_semana.strftime('%Y-%m-%d %H:%M:%S'))])
+        salidas_semana = Registro.search_count([('tipo', '=', 'salida_anticipada'), ('fecha_hora', '>=', inicio_semana.strftime('%Y-%m-%d %H:%M:%S'))])
+        incidencias = Registro.search_count([('tipo', '=', 'salida_anticipada'), ('justificado', '=', False), ('fecha_hora', '>=', inicio_semana.strftime('%Y-%m-%d %H:%M:%S'))])
         asistencias_semana = Registro.search_count([('tipo', '=', 'entrada'), ('fecha_hora', '>=', inicio_semana.strftime('%Y-%m-%d %H:%M:%S'))])
 
         dias_labels = ['L', 'M', 'X', 'J', 'V']
@@ -195,7 +195,7 @@ class NFCController(http.Controller):
             dia_inicio = inicio_semana + timedelta(days=i)
             dia_fin = dia_inicio + timedelta(days=1)
             conteo = Registro.search_count([
-                ('tipo', '=', 'salida'),
+                ('tipo', '=', 'salida_anticipada'),
                 ('fecha_hora', '>=', dia_inicio.strftime('%Y-%m-%d %H:%M:%S')),
                 ('fecha_hora', '<', dia_fin.strftime('%Y-%m-%d %H:%M:%S'))
             ])
