@@ -117,7 +117,28 @@ app.post('/nfc/read', (req, res) => {
 
 app.use(express.static(__dirname));
 
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
-  console.log(`Proxy /nfc/api → ${PROXY_TARGET}`);
-});
+const DEFAULT_PORT = parseInt(process.env.PORT || PORT, 10);
+const MAX_PORT_TRIES = 10;
+
+function startServer(portToUse, tryNumber = 1) {
+  const server = app.listen(portToUse, () => {
+    console.log(`Servidor corriendo en http://localhost:${portToUse}`);
+    console.log(`Proxy /nfc/api → ${PROXY_TARGET}`);
+  });
+
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE' && !process.env.PORT && tryNumber < MAX_PORT_TRIES) {
+      const nextPort = portToUse + 1;
+      console.warn(`Puerto ${portToUse} ocupado. Intentando arrancar en ${nextPort}...`);
+      startServer(nextPort, tryNumber + 1);
+    } else if (err.code === 'EADDRINUSE') {
+      console.error(`Error: el puerto ${portToUse} ya está en uso. Usa otra variable PORT o cierra el proceso que lo está usando.`);
+      process.exit(1);
+    } else {
+      console.error('Error al iniciar el servidor:', err);
+      process.exit(1);
+    }
+  });
+}
+
+startServer(DEFAULT_PORT);

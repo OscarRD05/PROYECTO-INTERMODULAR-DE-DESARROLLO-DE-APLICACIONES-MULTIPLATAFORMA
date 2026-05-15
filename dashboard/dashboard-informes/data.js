@@ -53,12 +53,13 @@ class OdooService {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// Variables globales (como "ventas" en el tutorial)
+// Variables globales
 // ═══════════════════════════════════════════════════════════════
 let odoo = null;
 let chartInstance = null;
+let vistaActual = 'dashboard';
 
-// Datos originales (sin filtrar) — equivalente al array "ventas" del tutorial
+// Datos originales (sin filtrar)
 let datosGrafica = [];      // [{dia, valor}] — datos de la gráfica del dashboard
 let datosAlumnos = [];      // array de alumnos sin filtrar
 let datosProfesores = [];   // array de profesores sin filtrar
@@ -68,8 +69,6 @@ let datosFaltas = [];       // registros de asistencia sin filtrar
 // Datos filtrados (los que se muestran actualmente en tabla y gráfico)
 let datosActuales = [];
 
-// Vista activa
-let vistaActual = 'dashboard';
 
 // ═══════════════════════════════════════════════════════════════
 // Referencias a elementos del DOM
@@ -93,7 +92,7 @@ window.onload = () => {
     document.getElementById("login-db").value = APP_CONFIG.ODOO_DB;
   }
 
-  // Inicializar gráfico vacío (tutorial: inicializarGrafico)
+  // Inicializar gráfico vacío
   inicializarGrafico();
 };
 
@@ -185,8 +184,6 @@ botonesNav.faltas.onclick = (e) => { e.preventDefault(); cargarTabla('faltas'); 
 
 // ═══════════════════════════════════════════════════════════════
 // cargarTabla — Carga datos y rellena tabla HTML por DOM
-// (Equivalente a la función cargarTabla del tutorial que rellena
-//  la tabla con innerHTML usando un bucle sobre los datos)
 // ═══════════════════════════════════════════════════════════════
 async function cargarTabla(tipo) {
   mostrarVista(tipo);
@@ -207,7 +204,7 @@ async function cargarTabla(tipo) {
       document.getElementById("kpi-incidencias").innerText = data.kpis.incidencias;
       document.getElementById("kpi-activos").innerText = data.kpis.activos;
 
-      // KPIs calculados con reduce/length (tutorial)
+      // KPIs calculados
       calcularKPIs(datosActuales, 'dashboard');
 
       // Rellenar el filtro de días con opciones únicas
@@ -295,14 +292,6 @@ function calcularKPIs(datos, tipo) {
     const conPermiso = datos.filter(a => a.recreo).length;
     document.getElementById("kpi-con-permiso").innerText = conPermiso;
 
-    // Total faltas — .reduce()
-    const totalFaltas = datos.reduce((sum, a) => sum + a.faltasTotal, 0);
-    document.getElementById("kpi-total-faltas").innerText = totalFaltas;
-
-    // Media faltas/alumno — .reduce() / .length
-    const mediaFaltas = datos.length > 0 ? (totalFaltas / datos.length).toFixed(1) : 0;
-    document.getElementById("kpi-media-faltas").innerText = mediaFaltas;
-
   } else if (tipo === 'profesores') {
     // Total profesores — .length
     document.getElementById("kpi-total-profesores").innerText = datos.length;
@@ -346,12 +335,12 @@ function calcularKPIs(datos, tipo) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// Renderizado de tablas por DOM (tutorial: innerHTML + bucle)
+// Renderizado de tablas por DOM
 // ═══════════════════════════════════════════════════════════════
 
 function renderTablaAlumnos(datos) {
   const tbody = document.getElementById("tabla-alumnos");
-  // Obtener tbody por ID y generar filas con innerHTML (patrón del tutorial)
+  // Obtener tbody por ID y generar filas con innerHTML
   tbody.innerHTML = datos.map(a => `
     <tr>
       <td>
@@ -359,9 +348,6 @@ function renderTablaAlumnos(datos) {
           ${a.nombre}
         </button>
       </td>
-      <td>${a.recreo ? "Sí" : "No"}</td>
-      <td>${a.faltasTotal}</td>
-      <td>${a.faltasSemanal}</td>
       <td>
         <label class="switch">
           <input type="checkbox" ${a.recreo ? "checked" : ""} onchange="togglePermiso(${a.id})">
@@ -406,18 +392,20 @@ function renderTablaNFC(datos) {
 
 function renderTablaFaltas(datos) {
   const tbody = document.getElementById("tabla-faltas");
-  const tipoLabel = { 'entrada': 'Entrada', 'salida': 'Salida', 'salida_anticipada': 'Salida Anticipada' };
+  const tipoLabel = { 'entrada': 'Entrada', 'salida_recreo': 'Salida Recreo', 'salida_anticipada': 'Salida Anticipada' };
   tbody.innerHTML = datos.map(r => `
     <tr>
       <td>${r.alumno}</td>
       <td>${r.fecha_hora}</td>
       <td>${tipoLabel[r.tipo] || r.tipo}</td>
       <td>
-        <div class="form-check form-switch d-inline-block">
-          <input class="form-check-input" type="checkbox" ${r.justificado ? 'checked' : ''}
-            onchange="toggleJustificadoFaltas(${r.id}, this.checked)">
+        <div class="d-flex align-items-center justify-content-center gap-2">
+          <div class="form-check form-switch m-0 p-0 d-flex align-items-center">
+            <input class="form-check-input m-0" type="checkbox" role="switch" style="cursor:pointer;" ${r.justificado ? 'checked' : ''}
+              onchange="toggleJustificadoFaltas(${r.id}, this.checked)">
+          </div>
+          ${r.justificado ? '<span class="badge bg-success">Sí</span>' : '<span class="badge bg-danger">No</span>'}
         </div>
-        ${r.justificado ? '<span class="badge bg-success">Sí</span>' : '<span class="badge bg-danger">No</span>'}
       </td>
       <td>${r.motivo || '-'}</td>
     </tr>
@@ -425,7 +413,7 @@ function renderTablaFaltas(datos) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// Filtros dinámicos — Usando .filter() (tutorial)
+// Filtros dinámicos
 // Escuchamos el evento change del select y filtramos los datos
 // ═══════════════════════════════════════════════════════════════
 
@@ -435,7 +423,7 @@ document.getElementById("filtro-dashboard").addEventListener("change", function(
   if (valor === "todos") {
     datosActuales = [...datosGrafica];
   } else {
-    // Usamos .filter() para filtrar los datos (patrón del tutorial)
+    // Usamos .filter() para filtrar los datos
     datosActuales = datosGrafica.filter(d => d.dia === valor);
   }
   calcularKPIs(datosActuales, 'dashboard');
@@ -448,7 +436,7 @@ document.getElementById("filtro-alumnos").addEventListener("change", function() 
   if (valor === "todos") {
     datosActuales = [...datosAlumnos];
   } else if (valor === "con-permiso") {
-    // .filter() — patrón del tutorial
+    // Filtrar con .filter()
     datosActuales = datosAlumnos.filter(a => a.recreo === true);
   } else if (valor === "sin-permiso") {
     datosActuales = datosAlumnos.filter(a => a.recreo === false);
@@ -516,7 +504,7 @@ function aplicarFiltroFaltas() {
 
 function rellenarFiltroDashboard(datos) {
   const select = document.getElementById("filtro-dashboard");
-  // Obtener valores únicos con .map() + Set (patrón del tutorial)
+  // Obtener valores únicos con .map() + Set
   const dias = [...new Set(datos.map(d => d.dia))];
   select.innerHTML = '<option value="todos">Todos los días</option>' +
     dias.map(d => `<option value="${d}">${d}</option>`).join("");
@@ -530,32 +518,35 @@ function rellenarFiltroProfesores(datos) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// GRÁFICOS — Chart.js (tutorial)
+// GRÁFICOS — Chart.js
 // ═══════════════════════════════════════════════════════════════
 
 // Colores para las barras (una por cada barra diferente)
 const coloresBarras = [
-  'rgba(59, 130, 246, 0.7)',
-  'rgba(239, 68, 68, 0.7)',
-  'rgba(34, 197, 94, 0.7)',
-  'rgba(234, 179, 8, 0.7)',
-  'rgba(168, 85, 247, 0.7)',
-  'rgba(249, 115, 22, 0.7)',
-  'rgba(20, 184, 166, 0.7)'
+  'rgba(139, 92, 246, 0.7)',
+  'rgba(6, 182, 212, 0.7)',
+  'rgba(236, 72, 153, 0.7)',
+  'rgba(16, 185, 129, 0.7)',
+  'rgba(244, 63, 94, 0.7)',
+  'rgba(245, 158, 11, 0.7)',
+  'rgba(99, 102, 241, 0.7)'
 ];
 const coloresBarrasBorde = [
-  'rgb(59, 130, 246)',
-  'rgb(239, 68, 68)',
-  'rgb(34, 197, 94)',
-  'rgb(234, 179, 8)',
-  'rgb(168, 85, 247)',
-  'rgb(249, 115, 22)',
-  'rgb(20, 184, 166)'
+  'rgb(139, 92, 246)',
+  'rgb(6, 182, 212)',
+  'rgb(236, 72, 153)',
+  'rgb(16, 185, 129)',
+  'rgb(244, 63, 94)',
+  'rgb(245, 158, 11)',
+  'rgb(99, 102, 241)'
 ];
+
+// Configuración general Chart.js para modo claro
+Chart.defaults.color = '#64748b';
+Chart.defaults.borderColor = 'rgba(0,0,0,0.1)';
 
 /**
  * inicializarGrafico — Crea el gráfico estático inicial
- * (Tutorial: Llama a esta función al cargar la página)
  */
 function inicializarGrafico() {
   const ctx = document.getElementById("miGrafico");
@@ -568,8 +559,8 @@ function inicializarGrafico() {
       datasets: [{
         label: "Número de salidas",
         data: [0, 0, 0, 0, 0],
-        backgroundColor: 'rgba(59, 130, 246, 0.5)',
-        borderColor: 'rgb(59, 130, 246)',
+        backgroundColor: 'rgba(139, 92, 246, 0.5)',
+        borderColor: 'rgb(139, 92, 246)',
         borderWidth: 1
       }]
     },
@@ -584,15 +575,7 @@ function inicializarGrafico() {
 }
 
 /**
- * renderizarGrafico — Actualiza el gráfico con datos reales usando .map()
- * (Tutorial: Chart.js necesita arrays separados de labels y valores.
- *  Usamos .map() para extraerlos de nuestro array de objetos.)
- *
- * Ejemplo del tutorial:
- *   // Tenemos: [ {nombre:A, valor:10}, {nombre:B, valor:20} ]
- *   // Chart.js necesita:
- *   //   Labels: ['A', 'B']
- *   //   Data: [10, 20]
+ * renderizarGrafico — Actualiza el gráfico con datos reales
  */
 function renderizarGrafico(datos) {
   const ctx = document.getElementById("miGrafico");
@@ -601,7 +584,7 @@ function renderizarGrafico(datos) {
     chartInstance.destroy();
   }
 
-  // Usamos .map() para separar labels y valores (patrón del tutorial)
+  // Separar labels y valores
   const labels = datos.map(d => d.dia);
   const valores = datos.map(d => d.valor);
 
@@ -632,7 +615,7 @@ function renderizarGrafico(datos) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// PDF — jsPDF + jsPDF-AutoTable (tutorial)
+// PDF — jsPDF + jsPDF-AutoTable
 // ═══════════════════════════════════════════════════════════════
 
 document.getElementById("btn-pdf-dashboard").addEventListener("click", () => descargarPDF('dashboard'));
@@ -643,8 +626,6 @@ document.getElementById("btn-pdf-faltas").addEventListener("click", () => descar
 
 /**
  * descargarPDF — Genera un informe PDF con jsPDF
- * (Tutorial: Genera PDF con título, tabla de datos con autoTable,
- *  gráfico capturado del canvas con toDataURL, y KPIs)
  */
 function descargarPDF(tipo) {
   const { jsPDF } = window.jspdf;
@@ -675,7 +656,7 @@ function descargarPDF(tipo) {
     doc.text(`Salidas Anticipadas: ${kpiSalidas}  |  Errores: ${kpiIncidencias}  |  Asistencias: ${kpiActivos}`, 10, 50);
     doc.text(`Total días: ${kpiTotalDias}  |  Suma salidas: ${kpiTotalSalidas}  |  Media: ${kpiMediaSalidas}`, 10, 57);
 
-    // Gráfico: capturar canvas con toDataURL (patrón del tutorial)
+    // Gráfico: capturar canvas con toDataURL
     const canvas = document.getElementById("miGrafico");
     if (canvas) {
       const imagenGrafico = canvas.toDataURL('image/jpeg', 1.0);
@@ -761,7 +742,7 @@ function descargarPDF(tipo) {
     startY = 50;
   }
 
-  // Generar tabla con autoTable (patrón del tutorial)
+  // Generar tabla con autoTable
   doc.autoTable({
     head: [columnas],
     body: filas,
@@ -809,17 +790,19 @@ async function cargarRegistrosAlumno(alumnoId) {
       registrosBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Sin registros</td></tr>';
       return;
     }
-    const tipoLabel = { 'entrada': 'Entrada', 'salida': 'Salida', 'salida_anticipada': 'Salida Anticipada' };
+    const tipoLabel = { 'entrada': 'Entrada', 'salida_recreo': 'Salida Recreo', 'salida_anticipada': 'Salida Anticipada' };
     registrosBody.innerHTML = registros.map(r => `
       <tr>
         <td>${r.fecha_hora}</td>
         <td>${tipoLabel[r.tipo] || r.tipo}</td>
         <td>
-          <div class="form-check form-switch d-inline-block">
-            <input class="form-check-input" type="checkbox" ${r.justificado ? 'checked' : ''}
-              onchange="toggleJustificado(${r.id}, this.checked)">
+          <div class="d-flex align-items-center justify-content-center gap-2">
+            <div class="form-check form-switch m-0 p-0 d-flex align-items-center">
+              <input class="form-check-input m-0" type="checkbox" role="switch" style="cursor:pointer;" ${r.justificado ? 'checked' : ''}
+                onchange="toggleJustificado(${r.id}, this.checked)">
+            </div>
+            ${r.justificado ? '<span class="badge bg-success">Justificado</span>' : '<span class="badge bg-danger">No justificado</span>'}
           </div>
-          ${r.justificado ? '<span class="badge bg-success">Justificado</span>' : '<span class="badge bg-danger">No justificado</span>'}
         </td>
         <td>${r.motivo || '-'}</td>
       </tr>

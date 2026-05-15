@@ -22,7 +22,7 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 
-<body class="bg-light">
+<body class="">
 
   <!-- ═══════════════════════════════════════════ -->
   <!--  MODAL DE LOGIN                             -->
@@ -61,40 +61,48 @@
   <div id="app-container" class="container-fluid d-none">
     <div class="row">
 
-      <!-- SIDEBAR -->
-      <aside class="col-md-3 col-lg-2 bg-white border-end min-vh-100 p-3">
-        <h5 class="mb-4">Panel de Control</h5>
+      <!-- BARRA LATERAL -->
+      <aside class="col-md-3 col-lg-2 sidebar-premium min-vh-100 p-4">
+        <h5 class="mb-4 text-dark fw-bold">Gestión de Centro</h5>
 
         <ul class="nav flex-column gap-2">
           <li class="nav-item">
-            <a id="btn-dashboard" class="nav-link active bg-primary-subtle text-primary fw-semibold rounded" href="#">
-              📊 Estadísticas
+            <a id="btn-dashboard" class="nav-link-premium active" href="#">
+              <span class="fs-5">📊</span> Resumen General
             </a>
           </li>
           <li class="nav-item">
-            <a id="btn-alumnos" class="nav-link text-dark" href="#">👥 Alumnado</a>
+            <a id="btn-alumnos" class="nav-link-premium" href="#">
+              <span class="fs-5">👥</span> Alumnado Matriculado
+            </a>
           </li>
           <li class="nav-item">
-            <a id="btn-profesores" class="nav-link text-dark" href="#">🧑‍🏫 Profesorado</a>
+            <a id="btn-profesores" class="nav-link-premium" href="#">
+              <span class="fs-5">🧑‍🏫</span> Profesorado
+            </a>
           </li>
           <li class="nav-item">
-            <a id="btn-nfc" class="nav-link text-dark" href="#">📡 Vinculación NFC</a>
+            <a id="btn-nfc" class="nav-link-premium" href="#">
+              <span class="fs-5">💳</span> Tarjetas y Accesos
+            </a>
           </li>
           <li class="nav-item">
-            <a id="btn-faltas" class="nav-link text-dark" href="#">📋 Faltas</a>
+            <a id="btn-faltas" class="nav-link-premium" href="#">
+              <span class="fs-5">⏱️</span> Control de Horarios
+            </a>
           </li>
         </ul>
 
-        <div class="mt-auto pt-4 border-top mt-4">
-          <small class="text-muted" id="session-info"></small>
-          <button id="btn-logout" class="btn btn-outline-danger btn-sm w-100 mt-2">Cerrar sesión</button>
+        <div class="mt-auto pt-4 border-top border-secondary mt-4">
+          <small class="text-muted d-block mb-3" id="session-info"></small>
+          <button id="btn-logout" class="btn-outline-premium w-100">Cerrar sesión</button>
         </div>
       </aside>
 
       <!-- CONTENIDO PRINCIPAL -->
       <main class="col-md-9 col-lg-10 p-4">
 
-        <!-- LOADING SPINNER -->
+        <!-- INDICADOR DE CARGA -->
         <div id="loading-spinner" class="loading-container d-none">
           <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Cargando...</span>
@@ -107,57 +115,57 @@
         <!-- ═══════════════════════════════════════════ -->
         <div id="vista-dashboard">
           <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>Control de Asistencia</h1>
-            <button id="btn-pdf-dashboard" class="btn btn-danger">📄 Descargar Informe PDF</button>
+            <h1 class="text-dark fw-bold">Visión Global</h1>
+            <button id="btn-pdf-dashboard" class="btn-premium-danger">📄 Descargar Informe PDF</button>
           </div>
 
           <!-- KPIs de la API -->
           <div class="row mb-4">
             <div class="col-md-4">
-              <div class="card text-white bg-primary">
-                <div class="card-header">Salidas Anticipadas (semanal)</div>
-                <div class="card-body">
-                  <h2 class="text-center" id="kpi-salidas">0</h2>
+              <div class="glass-card">
+                <div class="card-header-glass">Salidas Anticipadas (semanal)</div>
+                <div class="card-body-glass text-center">
+                  <h2 class="kpi-value accent-1" id="kpi-salidas">0</h2>
                 </div>
               </div>
             </div>
             <div class="col-md-4">
-              <div class="card text-white bg-danger">
-                <div class="card-header">Errores de lectura</div>
-                <div class="card-body">
-                  <h2 class="text-center" id="kpi-incidencias">0</h2>
+              <div class="glass-card">
+                <div class="card-header-glass">Errores de lectura</div>
+                <div class="card-body-glass text-center">
+                  <h2 class="kpi-value accent-4" id="kpi-incidencias">0</h2>
                 </div>
               </div>
             </div>
             <div class="col-md-4">
-              <div class="card text-white bg-success">
-                <div class="card-header">Asistencias (semanal)</div>
-                <div class="card-body">
-                  <h2 class="text-center" id="kpi-activos">0</h2>
+              <div class="glass-card">
+                <div class="card-header-glass">Asistencias (semanal)</div>
+                <div class="card-body-glass text-center">
+                  <h2 class="kpi-value accent-3" id="kpi-activos">0</h2>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- KPIs calculados con reduce/length (tutorial) -->
+          <!-- KPIs calculados -->
           <div class="row mb-4">
             <div class="col-md-6">
-              <div class="card border-info">
-                <div class="card-header bg-info text-white">📐 KPIs calculados (reduce / length)</div>
-                <div class="card-body">
+              <div class="glass-card">
+                <div class="card-header-glass">📐 Métricas Avanzadas</div>
+                <div class="card-body-glass">
                   <p><strong>Total de días registrados:</strong> <span id="kpi-total-dias">0</span></p>
-                  <p><strong>Total salidas (suma con reduce):</strong> <span id="kpi-total-salidas">0</span></p>
+                  <p><strong>Total salidas:</strong> <span id="kpi-total-salidas">0</span></p>
                   <p><strong>Media de salidas/día:</strong> <span id="kpi-media-salidas">0</span></p>
                   <p><strong>Día con más salidas:</strong> <span id="kpi-max-dia">-</span></p>
                 </div>
               </div>
             </div>
             <div class="col-md-6">
-              <div class="card border-warning">
-                <div class="card-header bg-warning text-dark">🔍 Filtro dinámico</div>
-                <div class="card-body">
+              <div class="glass-card">
+                <div class="card-header-glass">🔍 Filtros</div>
+                <div class="card-body-glass">
                   <label for="filtro-dashboard" class="form-label">Filtrar por día de la semana:</label>
-                  <select id="filtro-dashboard" class="form-select">
+                  <select id="filtro-dashboard" class="form-select-premium w-100">
                     <option value="todos">Todos los días</option>
                   </select>
                 </div>
@@ -166,9 +174,9 @@
           </div>
 
           <!-- Gráfico (Chart.js) -->
-          <div class="card mb-4">
-            <div class="card-header">Análisis Visual</div>
-            <div class="card-body">
+          <div class="glass-card mb-4">
+            <div class="card-header-glass">Análisis Visual</div>
+            <div class="card-body-glass">
               <div style="position: relative; height:40vh; width:100%">
                 <canvas id="miGrafico"></canvas>
               </div>
@@ -181,25 +189,25 @@
         <!-- ═══════════════════════════════════════════ -->
         <div id="vista-alumnos" class="d-none">
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2>Listado de Alumnos</h2>
-            <button id="btn-pdf-alumnos" class="btn btn-danger">📄 Descargar Informe PDF</button>
+            <h2 class="text-dark fw-bold">Directorio de Alumnos</h2>
+            <button id="btn-pdf-alumnos" class="btn-premium-danger">📄 Descargar Informe PDF</button>
           </div>
 
           <!-- Ficha alumno -->
-          <div id="ficha-alumno" class="card d-none mb-3">
-            <div class="card-body">
-              <h4 id="ficha-nombre"></h4>
+          <div id="ficha-alumno" class="glass-card d-none mb-3">
+            <div class="card-body-glass">
+              <h4 id="ficha-nombre" class="text-dark mb-3"></h4>
               <div class="row">
                 <div class="col-md-6">
-                  <p><strong>Grupo:</strong> <span id="ficha-grupo"></span></p>
-                  <p><strong>NFC:</strong> <span id="ficha-nfc"></span></p>
-                  <p><strong>Permiso recreo:</strong> <span id="ficha-recreo"></span></p>
+                  <p><strong>Grupo:</strong> <span id="ficha-grupo" class="text-dark"></span></p>
+                  <p><strong>NFC:</strong> <span id="ficha-nfc" class="text-dark"></span></p>
+                  <p><strong>Permiso recreo:</strong> <span id="ficha-recreo" class="text-dark"></span></p>
                 </div>
               </div>
-              <div id="ficha-registros">
-                <h5>Registros de asistencia</h5>
-                <table class="table table-sm table-striped text-center align-middle">
-                  <thead class="table-dark">
+              <div id="ficha-registros" class="mt-3">
+                <h5 class="text-dark mb-3">Registros de asistencia</h5>
+                <table class="table-glass text-center">
+                  <thead>
                     <tr>
                       <th>Fecha</th>
                       <th>Tipo</th>
@@ -213,47 +221,31 @@
             </div>
           </div>
 
-          <!-- KPIs calculados con reduce/length (tutorial) -->
+          <!-- KPIs -->
           <div class="row mb-3">
-            <div class="col-md-3">
-              <div class="card text-white bg-primary">
-                <div class="card-body text-center">
-                  <h5>Total Alumnos</h5>
-                  <h3 id="kpi-total-alumnos">0</h3>
+            <div class="col-md-6">
+              <div class="glass-card">
+                <div class="card-body-glass text-center">
+                  <h5 class="text-muted text-uppercase fs-6">Total Alumnos</h5>
+                  <h3 class="kpi-value accent-1" id="kpi-total-alumnos">0</h3>
                 </div>
               </div>
             </div>
-            <div class="col-md-3">
-              <div class="card text-white bg-success">
-                <div class="card-body text-center">
-                  <h5>Con permiso recreo</h5>
-                  <h3 id="kpi-con-permiso">0</h3>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="card text-white bg-warning text-dark">
-                <div class="card-body text-center">
-                  <h5>Total Faltas</h5>
-                  <h3 id="kpi-total-faltas">0</h3>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="card text-white bg-info">
-                <div class="card-body text-center">
-                  <h5>Media Faltas/Alumno</h5>
-                  <h3 id="kpi-media-faltas">0</h3>
+            <div class="col-md-6">
+              <div class="glass-card">
+                <div class="card-body-glass text-center">
+                  <h5 class="text-muted text-uppercase fs-6">Con permiso recreo</h5>
+                  <h3 class="kpi-value accent-3" id="kpi-con-permiso">0</h3>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Filtro dinámico (tutorial: filter) -->
+          <!-- Filtros -->
           <div class="row mb-3">
             <div class="col-md-4">
               <label for="filtro-alumnos" class="form-label">Filtrar por permiso recreo:</label>
-              <select id="filtro-alumnos" class="form-select">
+              <select id="filtro-alumnos" class="form-select-premium w-100">
                 <option value="todos">Todos</option>
                 <option value="con-permiso">Con permiso</option>
                 <option value="sin-permiso">Sin permiso</option>
@@ -262,15 +254,12 @@
           </div>
 
           <!-- Tabla -->
-          <div class="card">
-            <div class="card-body">
-              <table class="table table-striped text-center align-middle">
-                <thead class="table-dark">
+          <div class="glass-card mt-2">
+            <div class="card-body-glass p-0">
+              <table class="table-glass text-center mb-0">
+                <thead>
                   <tr>
                     <th>Nombre</th>
-                    <th>Transporte escolar</th>
-                    <th>Faltas Totales</th>
-                    <th>Faltas Semanales</th>
                     <th>Salida Anticipada/Recreo</th>
                   </tr>
                 </thead>
@@ -285,53 +274,53 @@
         <!-- ═══════════════════════════════════════════ -->
         <div id="vista-profesores" class="d-none">
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2>Listado de Profesores</h2>
-            <button id="btn-pdf-profesores" class="btn btn-danger">📄 Descargar Informe PDF</button>
+            <h2 class="text-dark fw-bold">Profesorado</h2>
+            <button id="btn-pdf-profesores" class="btn-premium-danger">📄 Descargar Informe PDF</button>
           </div>
 
-          <!-- KPIs calculados con reduce/length (tutorial) -->
+          <!-- KPIs -->
           <div class="row mb-3">
             <div class="col-md-4">
-              <div class="card text-white bg-primary">
-                <div class="card-body text-center">
-                  <h5>Total Profesores</h5>
-                  <h3 id="kpi-total-profesores">0</h3>
+              <div class="glass-card">
+                <div class="card-body-glass text-center">
+                  <h5 class="text-muted text-uppercase fs-6">Total Profesores</h5>
+                  <h3 class="kpi-value accent-1" id="kpi-total-profesores">0</h3>
                 </div>
               </div>
             </div>
             <div class="col-md-4">
-              <div class="card text-white bg-success">
-                <div class="card-body text-center">
-                  <h5>Con NFC vinculado</h5>
-                  <h3 id="kpi-profesores-nfc">0</h3>
+              <div class="glass-card">
+                <div class="card-body-glass text-center">
+                  <h5 class="text-muted text-uppercase fs-6">Con NFC vinculado</h5>
+                  <h3 class="kpi-value accent-3" id="kpi-profesores-nfc">0</h3>
                 </div>
               </div>
             </div>
             <div class="col-md-4">
-              <div class="card text-white bg-warning text-dark">
-                <div class="card-body text-center">
-                  <h5>Grupos únicos</h5>
-                  <h3 id="kpi-grupos-unicos">0</h3>
+              <div class="glass-card">
+                <div class="card-body-glass text-center">
+                  <h5 class="text-muted text-uppercase fs-6">Grupos únicos</h5>
+                  <h3 class="kpi-value accent-2" id="kpi-grupos-unicos">0</h3>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Filtro dinámico (tutorial: filter) -->
+          <!-- Filtros -->
           <div class="row mb-3">
             <div class="col-md-4">
               <label for="filtro-profesores" class="form-label">Filtrar por grupo:</label>
-              <select id="filtro-profesores" class="form-select">
+              <select id="filtro-profesores" class="form-select-premium w-100">
                 <option value="todos">Todos</option>
               </select>
             </div>
           </div>
 
           <!-- Tabla -->
-          <div class="card">
-            <div class="card-body">
-              <table class="table table-striped text-center align-middle">
-                <thead class="table-dark">
+          <div class="glass-card mt-2">
+            <div class="card-body-glass p-0">
+              <table class="table-glass text-center mb-0">
+                <thead>
                   <tr>
                     <th>Nombre</th>
                     <th>Grupo</th>
@@ -349,71 +338,71 @@
         <!-- ═══════════════════════════════════════════ -->
         <div id="vista-nfc" class="d-none">
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2>Vinculación NFC</h2>
-            <button id="btn-pdf-nfc" class="btn btn-danger">📄 Descargar Informe PDF</button>
+            <h2 class="text-dark fw-bold">Gestión de Tarjetas NFC</h2>
+            <button id="btn-pdf-nfc" class="btn-premium-danger">📄 Descargar Informe PDF</button>
           </div>
 
           <!-- Formulario vinculación -->
-          <div class="card mb-3">
-            <div class="card-body">
+          <div class="glass-card mb-4">
+            <div class="card-body-glass">
               <div class="row g-3 align-items-end">
                 <div class="col-md-4">
                   <label for="select-usuario" class="form-label">Usuario</label>
-                  <select id="select-usuario" class="form-select"></select>
+                  <select id="select-usuario" class="form-select-premium w-100"></select>
                 </div>
                 <div class="col-md-4">
                   <label for="input-nfc" class="form-label">UID tarjeta NFC</label>
-                  <input id="input-nfc" class="form-control" placeholder="Escanea la tarjeta o escribe el UID">
+                  <input id="input-nfc" class="form-control-premium w-100" placeholder="Escanea la tarjeta o escribe el UID">
                 </div>
                 <div class="col-md-4">
-                  <button id="btn-vincular" class="btn btn-primary w-100">Vincular</button>
+                  <button id="btn-vincular" class="btn-premium w-100">Vincular</button>
                 </div>
               </div>
-              <small class="text-muted mt-2 d-block">Acerca la tarjeta al lector NFC; el UID se escribirá automáticamente. Pulsa Enter o Vincular para confirmar.</small>
+              <small class="text-muted mt-3 d-block">Acerca la tarjeta al lector NFC; el UID se escribirá automáticamente. Pulsa Enter o Vincular para confirmar.</small>
             </div>
           </div>
 
-          <!-- KPIs calculados con reduce/length (tutorial) -->
+          <!-- KPIs -->
           <div class="row mb-3">
             <div class="col-md-3">
-              <div class="card text-white bg-primary">
-                <div class="card-body text-center">
-                  <h5>Total Usuarios</h5>
-                  <h3 id="kpi-total-usuarios">0</h3>
+              <div class="glass-card">
+                <div class="card-body-glass text-center">
+                  <h5 class="text-muted text-uppercase fs-6">Total Usuarios</h5>
+                  <h3 class="kpi-value accent-1" id="kpi-total-usuarios">0</h3>
                 </div>
               </div>
             </div>
             <div class="col-md-3">
-              <div class="card text-white bg-success">
-                <div class="card-body text-center">
-                  <h5>Con NFC</h5>
-                  <h3 id="kpi-nfc-vinculados">0</h3>
+              <div class="glass-card">
+                <div class="card-body-glass text-center">
+                  <h5 class="text-muted text-uppercase fs-6">Con NFC</h5>
+                  <h3 class="kpi-value accent-3" id="kpi-nfc-vinculados">0</h3>
                 </div>
               </div>
             </div>
             <div class="col-md-3">
-              <div class="card text-white bg-danger">
-                <div class="card-body text-center">
-                  <h5>Sin NFC</h5>
-                  <h3 id="kpi-nfc-no-vinculados">0</h3>
+              <div class="glass-card">
+                <div class="card-body-glass text-center">
+                  <h5 class="text-muted text-uppercase fs-6">Sin NFC</h5>
+                  <h3 class="kpi-value accent-4" id="kpi-nfc-no-vinculados">0</h3>
                 </div>
               </div>
             </div>
             <div class="col-md-3">
-              <div class="card text-white bg-info">
-                <div class="card-body text-center">
-                  <h5>% Vinculado</h5>
-                  <h3 id="kpi-nfc-porcentaje">0%</h3>
+              <div class="glass-card">
+                <div class="card-body-glass text-center">
+                  <h5 class="text-muted text-uppercase fs-6">% Vinculado</h5>
+                  <h3 class="kpi-value accent-2" id="kpi-nfc-porcentaje">0%</h3>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Filtro dinámico (tutorial: filter) -->
+          <!-- Filtros -->
           <div class="row mb-3">
             <div class="col-md-4">
               <label for="filtro-nfc" class="form-label">Filtrar por rol:</label>
-              <select id="filtro-nfc" class="form-select">
+              <select id="filtro-nfc" class="form-select-premium w-100">
                 <option value="todos">Todos</option>
                 <option value="estudiante">Estudiante</option>
                 <option value="profesor">Profesor</option>
@@ -422,10 +411,10 @@
           </div>
 
           <!-- Tabla -->
-          <div class="card">
-            <div class="card-body">
-              <table class="table table-striped text-center align-middle">
-                <thead class="table-dark">
+          <div class="glass-card mt-2">
+            <div class="card-body-glass p-0">
+              <table class="table-glass text-center mb-0">
+                <thead>
                   <tr>
                     <th>Nombre</th>
                     <th>Rol</th>
@@ -443,41 +432,41 @@
         <!-- ═══════════════════════════════════════════ -->
         <div id="vista-faltas" class="d-none">
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2>Registros de Faltas</h2>
-            <button id="btn-pdf-faltas" class="btn btn-danger">📄 Descargar Informe PDF</button>
+            <h2 class="text-dark fw-bold">Historial de Accesos y Salidas</h2>
+            <button id="btn-pdf-faltas" class="btn-premium-danger">📄 Descargar Informe PDF</button>
           </div>
 
           <!-- KPIs -->
           <div class="row mb-3">
             <div class="col-md-3">
-              <div class="card text-white bg-primary">
-                <div class="card-body text-center">
-                  <h5>Total Registros</h5>
-                  <h3 id="kpi-faltas-total">0</h3>
+              <div class="glass-card">
+                <div class="card-body-glass text-center">
+                  <h5 class="text-muted text-uppercase fs-6">Total Registros</h5>
+                  <h3 class="kpi-value accent-1" id="kpi-faltas-total">0</h3>
                 </div>
               </div>
             </div>
             <div class="col-md-3">
-              <div class="card text-white bg-success">
-                <div class="card-body text-center">
-                  <h5>Justificados</h5>
-                  <h3 id="kpi-faltas-justificados">0</h3>
+              <div class="glass-card">
+                <div class="card-body-glass text-center">
+                  <h5 class="text-muted text-uppercase fs-6">Justificados</h5>
+                  <h3 class="kpi-value accent-3" id="kpi-faltas-justificados">0</h3>
                 </div>
               </div>
             </div>
             <div class="col-md-3">
-              <div class="card text-white bg-danger">
-                <div class="card-body text-center">
-                  <h5>No justificados</h5>
-                  <h3 id="kpi-faltas-no-justificados">0</h3>
+              <div class="glass-card">
+                <div class="card-body-glass text-center">
+                  <h5 class="text-muted text-uppercase fs-6">No justificados</h5>
+                  <h3 class="kpi-value accent-4" id="kpi-faltas-no-justificados">0</h3>
                 </div>
               </div>
             </div>
             <div class="col-md-3">
-              <div class="card text-white bg-info">
-                <div class="card-body text-center">
-                  <h5>% Justificados</h5>
-                  <h3 id="kpi-faltas-porcentaje">0%</h3>
+              <div class="glass-card">
+                <div class="card-body-glass text-center">
+                  <h5 class="text-muted text-uppercase fs-6">% Justificados</h5>
+                  <h3 class="kpi-value accent-2" id="kpi-faltas-porcentaje">0%</h3>
                 </div>
               </div>
             </div>
@@ -487,16 +476,16 @@
           <div class="row mb-3">
             <div class="col-md-4">
               <label for="filtro-faltas-tipo" class="form-label">Filtrar por tipo:</label>
-              <select id="filtro-faltas-tipo" class="form-select">
+              <select id="filtro-faltas-tipo" class="form-select-premium w-100">
                 <option value="todos">Todos</option>
                 <option value="entrada">Entrada</option>
-                <option value="salida">Salida</option>
+                <option value="salida_recreo">Salida Recreo</option>
                 <option value="salida_anticipada">Salida Anticipada</option>
               </select>
             </div>
             <div class="col-md-4">
               <label for="filtro-faltas-justificado" class="form-label">Filtrar por justificación:</label>
-              <select id="filtro-faltas-justificado" class="form-select">
+              <select id="filtro-faltas-justificado" class="form-select-premium w-100">
                 <option value="todos">Todos</option>
                 <option value="justificado">Justificados</option>
                 <option value="no-justificado">No justificados</option>
@@ -505,10 +494,10 @@
           </div>
 
           <!-- Tabla -->
-          <div class="card">
-            <div class="card-body">
-              <table class="table table-striped text-center align-middle">
-                <thead class="table-dark">
+          <div class="glass-card mt-2">
+            <div class="card-body-glass p-0">
+              <table class="table-glass text-center mb-0">
+                <thead>
                   <tr>
                     <th>Alumno</th>
                     <th>Fecha</th>

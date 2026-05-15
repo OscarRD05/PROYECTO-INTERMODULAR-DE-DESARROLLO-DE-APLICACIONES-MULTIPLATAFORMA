@@ -1,5 +1,5 @@
 const APP_CONFIG = {
-  ODOO_URL: 'http://raspberry.local:8069',
+  ODOO_URL: 'http://192.168.0.35:8069',
   ODOO_DB: 'prueba',
   PORT: 3000
 };
