@@ -12,12 +12,15 @@
             Spacing="20"
             VerticalOptions="Center">
 
-            <Frame
+            <Border
                 Padding="30"
                 BackgroundColor="White"
-                BorderColor="#dddddd"
-                CornerRadius="20"
-                HasShadow="True">
+                Stroke="#dddddd"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 20,20,20,20">
+                <Border.Shadow>
+                    <Shadow Offset="0,4" Radius="10" Opacity="0.15" />
+                </Border.Shadow>
 
                 <VerticalStackLayout Spacing="15">
 
@@ -85,7 +88,7 @@
 
                 </VerticalStackLayout>
 
-            </Frame>
+            </Border>
 
         </VerticalStackLayout>
 

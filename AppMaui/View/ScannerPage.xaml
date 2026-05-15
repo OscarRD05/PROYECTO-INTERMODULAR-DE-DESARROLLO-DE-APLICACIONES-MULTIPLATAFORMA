@@ -11,28 +11,7 @@
             Padding="20"
             Spacing="16">
 
-            <HorizontalStackLayout
-                HorizontalOptions="FillAndExpand"
-                Spacing="10">
-
-                <Button
-                    Text="Config"
-                    Clicked="OnSettingsClicked"
-                    BackgroundColor="#6c757d"
-                    TextColor="White"
-                    CornerRadius="12"
-                    WidthRequest="100" />
-
-                <Button
-                    Text="Salir"
-                    Clicked="OnLogoutClicked"
-                    BackgroundColor="#dc3545"
-                    TextColor="White"
-                    CornerRadius="12"
-                    WidthRequest="100"
-                    HorizontalOptions="EndAndExpand" />
-
-            </HorizontalStackLayout>
+            
 
             <Label
                 Text="Scanner NFC"
@@ -67,13 +46,14 @@
                 IsVisible="False"
                 Color="#007bff" />
 
-            <Frame
+            <Border
                 x:Name="AlumnoCard"
                 IsVisible="False"
-                CornerRadius="20"
+                StrokeShape="RoundRectangle 20,20,20,20"
+                StrokeThickness="1"
                 Padding="20"
                 BackgroundColor="White"
-                BorderColor="#dddddd">
+                Stroke="#dddddd">
 
                 <VerticalStackLayout
                     Spacing="15"
@@ -92,9 +72,10 @@
                         HorizontalOptions="Center"
                         TextColor="#666" />
 
-                    <Frame
+                    <Border
                         x:Name="EstadoFrame"
-                        CornerRadius="12"
+                        StrokeShape="RoundRectangle 12,12,12,12"
+                        StrokeThickness="0"
                         Padding="10"
                         HorizontalOptions="Center">
 
@@ -105,7 +86,7 @@
                             TextColor="White"
                             HorizontalOptions="Center" />
 
-                    </Frame>
+                    </Border>
 
                     <Label
                         Text="Registrar asistencia"
@@ -115,33 +96,14 @@
                         TextColor="#333"
                         Margin="0,10,0,5" />
 
-                    <HorizontalStackLayout
-                        HorizontalOptions="Center"
-                        Spacing="10">
-
-                        <Button
+                    <Button
                             x:Name="BtnEntrada"
                             Text="Entrada"
                             BackgroundColor="#28a745"
                             TextColor="White"
                             CornerRadius="12"
-                            WidthRequest="130"
+                            HorizontalOptions="Center"
                             Clicked="OnRegistrarEntrada" />
-
-                        <Button
-                            x:Name="BtnSalida"
-                            Text="Salida"
-                            BackgroundColor="#fd7e14"
-                            TextColor="White"
-                            CornerRadius="12"
-                            WidthRequest="130"
-                            Clicked="OnRegistrarSalida" />
-
-                    </HorizontalStackLayout>
-
-                    <HorizontalStackLayout
-                        HorizontalOptions="Center"
-                        Spacing="10">
 
                         <Button
                             x:Name="BtnSalidaRecreo"
@@ -149,7 +111,7 @@
                             BackgroundColor="#17a2b8"
                             TextColor="White"
                             CornerRadius="12"
-                            WidthRequest="130"
+                            HorizontalOptions="Center"
                             IsVisible="False"
                             Clicked="OnRegistrarSalidaRecreo" />
 
@@ -159,10 +121,8 @@
                             BackgroundColor="#dc3545"
                             TextColor="White"
                             CornerRadius="12"
-                            WidthRequest="130"
+                            HorizontalOptions="Center"
                             Clicked="OnRegistrarSalidaAnticipada" />
-
-                    </HorizontalStackLayout>
 
                     <Label
                         x:Name="RegistroStatusLabel"
@@ -173,7 +133,7 @@
 
                 </VerticalStackLayout>
 
-            </Frame>
+            </Border>
 
         </VerticalStackLayout>
     </ScrollView>

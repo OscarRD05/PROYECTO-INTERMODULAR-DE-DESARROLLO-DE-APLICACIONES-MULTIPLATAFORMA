@@ -10,6 +10,70 @@ _logger = logging.getLogger(__name__)
 
 class NFCController(http.Controller):
 
+    @staticmethod
+    def _generate_uid_variants(uid_hex):
+        """Genera variantes de formato UID para comparar lo que lee Android (hex)
+        con lo que lee Windows (decimal little-endian, 10 digitos).
+
+        Ejemplo: Android lee '534e2d1e630001' ->primeros 4 bytes invertidos
+        -> '1E2D4E53' -> decimal 506285651 -> zero-pad '0506285651' (formato Odoo).
+        """
+        variants = set()
+        uid_hex = uid_hex.replace(':', '').replace('-', '').lower()
+
+        # Hex tal cual (lo que lee Android)
+        variants.add(uid_hex)
+        variants.add(uid_hex.upper())
+
+        try:
+            byte_count = len(uid_hex) // 2
+            if byte_count > 0 and len(uid_hex) == byte_count * 2:
+                raw_bytes = bytes.fromhex(uid_hex)
+
+                # Decimal little-endian de los primeros 4 bytes (formato Windows/Odoo)
+                if byte_count >= 4:
+                    first4 = raw_bytes[:4]
+                    int4_le = int.from_bytes(first4, byteorder='little')
+                    variants.add(str(int4_le))
+                    variants.add(f'{int4_le:010d}')
+
+                # Decimal little-endian de todos los bytes
+                int_le = int.from_bytes(raw_bytes, byteorder='little')
+                variants.add(str(int_le))
+                variants.add(f'{int_le:010d}')
+        except (ValueError, TypeError):
+            pass
+
+        return [v for v in variants if v]
+
+    @http.route('/nfc/api/scan_uid', type='json', auth='public', cors='*', csrf=False)
+    def api_scan_uid(self, uid, **kwargs):
+        """Busca un alumno por UID NFC probando multiples formatos de conversión."""
+        Alumno = request.env['nfc.alumno'].sudo()
+
+        variants = self._generate_uid_variants(uid)
+        _logger.info("NFC scan_uid: raw=%s, trying %d variants", uid, len(variants))
+
+        for variant in variants:
+            alumno = Alumno.search([('uid_tarjeta_rfid', '=', variant)], limit=1)
+            if alumno:
+                _logger.info("NFC scan_uid: matched variant=%s -> alumno=%s", variant, alumno.nombre_completo)
+                curso = alumno.curso_id.nombre_grupo if alumno.curso_id else 'Sin curso'
+                return {
+                    "status": "ok",
+                    "alumno": {
+                        "id": alumno.id,
+                        "nombre_completo": alumno.nombre_completo,
+                        "curso_id": [alumno.curso_id.id, curso] if alumno.curso_id else False,
+                        "permiso_salida": alumno.permiso_salida,
+                        "uid_tarjeta_rfid": alumno.uid_tarjeta_rfid or '',
+                    },
+                    "matched_variant": variant,
+                }
+
+        _logger.info("NFC scan_uid: no match for uid=%s", uid)
+        return {"status": "ok", "alumno": None}
+
     @http.route('/nfc/test', type='http', auth='none', cors='*', csrf=False)
     def api_test(self, **kwargs):
         return "OK - NFC Reader module loaded"
@@ -46,12 +110,16 @@ class NFCController(http.Controller):
         return {"status": "ok", "records": records}
     
     @http.route('/nfc/api/log', type='json', auth='public', cors='*', csrf=False)
-    def api_log(self, alumno_id, tipo='entrada', **kwargs):
-        log = request.env['nfc.registro_asistencia'].sudo().create({
+    def api_log(self, alumno_id, tipo='entrada', profesor_id=None, justificado=False, **kwargs):
+        vals = {
             'alumno_id': alumno_id,
-            'tipo': tipo
-        })
-        return {"status": "ok", "log_id": log.id}
+            'tipo': tipo,
+            'justificado': justificado,
+        }
+        if profesor_id:
+            vals['profesor_id'] = profesor_id
+        record = request.env['nfc.registro_asistencia'].sudo().create(vals)
+        return {"status": "ok", "log_id": record.id}
 
     @http.route('/nfc/read', type='json', auth='public', cors='*', csrf=False)
     def nfc_read(self, uid=None, **kwargs):
@@ -178,10 +246,11 @@ class NFCController(http.Controller):
         return {"status": "ok", "justificado": record.justificado}
 
     @http.route('/nfc/api/registrar_salida_anticipada', type='json', auth='public', cors='*', csrf=False)
-    def api_registrar_salida_anticipada(self, alumno_id, motivo='', profesor_id=None, **kwargs):
+    def api_registrar_salida_anticipada(self, alumno_id, motivo='', profesor_id=None, justificado=False, **kwargs):
         vals = {
             'alumno_id': alumno_id,
             'tipo': 'salida_anticipada',
+            'justificado': justificado,
         }
         if motivo:
             vals['motivo'] = motivo

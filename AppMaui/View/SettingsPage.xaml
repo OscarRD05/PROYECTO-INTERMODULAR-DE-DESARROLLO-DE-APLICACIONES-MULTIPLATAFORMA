@@ -18,11 +18,12 @@
                 HorizontalOptions="Center"
                 TextColor="#222" />
 
-            <Frame
-                CornerRadius="16"
+            <Border
+                StrokeShape="RoundRectangle 16,16,16,16"
+                StrokeThickness="1"
                 Padding="20"
                 BackgroundColor="White"
-                BorderColor="#dddddd">
+                Stroke="#dddddd">
 
                 <VerticalStackLayout Spacing="15">
 
@@ -81,7 +82,7 @@
 
                 </VerticalStackLayout>
 
-            </Frame>
+            </Border>
 
             <Button
                 Text="Volver"

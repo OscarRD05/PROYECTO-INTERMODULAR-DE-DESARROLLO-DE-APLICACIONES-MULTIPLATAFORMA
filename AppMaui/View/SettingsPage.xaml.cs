@@ -12,7 +12,7 @@ public partial class SettingsPage : ContentPage
         DbEntry.Text = App.OdooDb;
     }
 
-    private async void OnTestConnection(object sender, EventArgs e)
+    private async void OnTestConnection(object? sender, EventArgs e)
     {
         string url = UrlEntry.Text?.Trim() ?? "";
 
@@ -46,7 +46,7 @@ public partial class SettingsPage : ContentPage
         }
     }
 
-    private void OnSave(object sender, EventArgs e)
+    private void OnSave(object? sender, EventArgs e)
     {
         string url = UrlEntry.Text?.Trim() ?? "";
         string db = DbEntry.Text?.Trim() ?? "";
@@ -65,7 +65,7 @@ public partial class SettingsPage : ContentPage
         SaveResultLabel.TextColor = Colors.Green;
     }
 
-    private async void OnBack(object sender, EventArgs e)
+    private async void OnBack(object? sender, EventArgs e)
     {
         await Navigation.PopAsync();
     }

@@ -12,7 +12,7 @@ public partial class MainPage : ContentPage
         InitializeComponent();
     }
 
-    private async void OnLoginClicked(object sender, EventArgs e)
+    private async void OnLoginClicked(object? sender, EventArgs e)
     {
         ErrorLabel.Text = "";
 
@@ -45,6 +45,7 @@ public partial class MainPage : ContentPage
             if (ok)
             {
                 App.LoggedInUid = uid;
+                App.LoggedInProfesorId = await _odoo.BuscarProfesorAsync(uid);
                 await Navigation.PushAsync(new ScannerPage());
                 return;
             }
@@ -63,7 +64,7 @@ public partial class MainPage : ContentPage
         }
     }
 
-    private async void OnSettingsClicked(object sender, EventArgs e)
+    private async void OnSettingsClicked(object? sender, EventArgs e)
     {
         await Navigation.PushAsync(new SettingsPage());
     }

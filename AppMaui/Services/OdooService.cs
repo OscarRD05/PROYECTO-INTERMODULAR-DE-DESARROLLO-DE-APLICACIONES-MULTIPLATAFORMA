@@ -148,6 +148,54 @@ public class OdooService
         }
     }
 
+    public async Task<AlumnoResult?> BuscarAlumnoPorUidAsync(string uidHex)
+    {
+        try
+        {
+            string responseText = await CallApiRawAsync("/nfc/api/scan_uid", new
+            {
+                uid = uidHex,
+            });
+
+            JsonElement result = ParseResult(responseText);
+
+            if (!result.TryGetProperty("alumno", out JsonElement alumnoEl)
+                || alumnoEl.ValueKind == JsonValueKind.Null
+                || alumnoEl.ValueKind == JsonValueKind.Undefined)
+            {
+                return null;
+            }
+
+            var alumnoResult = new AlumnoResult
+            {
+                Id = alumnoEl.TryGetProperty("id", out JsonElement idEl) ? ExtractInt(alumnoEl, "id") : 0,
+                Nombre = alumnoEl.TryGetProperty("nombre_completo", out JsonElement nameEl)
+                    ? nameEl.GetString() ?? "" : "",
+                PermisoSalida = alumnoEl.TryGetProperty("permiso_salida", out JsonElement permisoEl)
+                    && permisoEl.ValueKind == JsonValueKind.True,
+                UidTarjeta = alumnoEl.TryGetProperty("uid_tarjeta_rfid", out JsonElement uidEl)
+                    ? uidEl.GetString() ?? "" : "",
+            };
+
+            if (alumnoEl.TryGetProperty("curso_id", out JsonElement cursoEl)
+                && cursoEl.ValueKind == JsonValueKind.Array
+                && cursoEl.GetArrayLength() > 1)
+            {
+                alumnoResult.Curso = cursoEl[1].GetString() ?? "Sin curso";
+            }
+            else
+            {
+                alumnoResult.Curso = "Sin curso";
+            }
+
+            return alumnoResult;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     public async Task<AlumnoResult?> BuscarAlumnoAsync(string texto)
     {
         string responseText = await CallApiRawAsync("/nfc/api/search", new
@@ -197,24 +245,74 @@ public class OdooService
         return alumnoResult;
     }
 
-    public async Task<bool> RegistrarAsistenciaAsync(int alumnoId, string tipo)
+    public async Task<int> BuscarProfesorAsync(int uid)
     {
-        string responseText = await CallApiRawAsync("/nfc/api/log", new
+        try
         {
-            alumno_id = alumnoId,
-            tipo,
-        });
+            string responseText = await CallApiRawAsync("/nfc/api/search", new
+            {
+                model = "nfc.profesor",
+                domain = new object[] { new object[] { "usuario_id", "=", uid } },
+                fields = new string[] { "id", "nombre_completo" },
+            });
+
+            JsonElement result = ParseResult(responseText);
+
+            if (result.TryGetProperty("records", out JsonElement records)
+                && records.GetArrayLength() > 0)
+            {
+                JsonElement profesor = records[0];
+                return profesor.TryGetProperty("id", out JsonElement idEl)
+                    ? idEl.GetInt32() : -1;
+            }
+
+            return -1;
+        }
+        catch
+        {
+            return -1;
+        }
+    }
+
+    public async Task<bool> RegistrarAsistenciaAsync(int alumnoId, string tipo, int profesorId = -1, bool justificado = false)
+    {
+        string responseText;
+        if (profesorId > 0)
+        {
+            responseText = await CallApiRawAsync("/nfc/api/log", new
+            {
+                alumno_id = alumnoId,
+                tipo,
+                profesor_id = profesorId,
+                justificado,
+            });
+        }
+        else
+        {
+            responseText = await CallApiRawAsync("/nfc/api/log", new
+            {
+                alumno_id = alumnoId,
+                tipo,
+                justificado,
+            });
+        }
 
         JsonElement result = ParseResult(responseText);
         return result.GetProperty("status").GetString() == "ok";
     }
 
-    public async Task<bool> RegistrarSalidaAnticipadaAsync(int alumnoId, string motivo = "")
+    public async Task<bool> RegistrarSalidaAnticipadaAsync(int alumnoId, string motivo = "", int profesorId = -1)
     {
         var parameters = new Dictionary<string, object>
         {
             ["alumno_id"] = alumnoId,
+            ["justificado"] = false,
         };
+
+        if (profesorId > 0)
+        {
+            parameters["profesor_id"] = profesorId;
+        }
 
         if (!string.IsNullOrWhiteSpace(motivo))
         {
