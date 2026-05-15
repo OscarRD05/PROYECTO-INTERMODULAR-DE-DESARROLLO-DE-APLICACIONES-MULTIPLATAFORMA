@@ -1,46 +1,105 @@
 using System.Text;
 using System.Text.Json;
+using Plugin.NFC;
 
 namespace App.View;
 
 public partial class ScannerPage : ContentPage
 {
-    private const string ODOO_URL = "http://10.102.7.216:8069";
+    private const string ODOO_URL = "http://10.102.6.178:8069";
 
     public ScannerPage()
     {
         InitializeComponent();
+
+        StartNfc();
     }
 
-    private async void OnScanClicked(object sender, EventArgs e)
+    private async void StartNfc()
     {
-        await DisplayAlert(
-            "NFC",
-            "Aquí irá la lectura NFC real",
-            "OK"
-        );
-    }
+        try
+        {
+            if (!CrossNFC.IsSupported)
+            {
+                StatusLabel.Text = "NFC no soportado";
+                return;
+            }
 
-    private async void OnSearchClicked(object sender, EventArgs e)
-    {
-        string busqueda = BusquedaEntry.Text?.Trim() ?? "";
+            if (!CrossNFC.Current.IsAvailable)
+            {
+                StatusLabel.Text = "NFC desactivado";
+                return;
+            }
 
-        if (string.IsNullOrWhiteSpace(busqueda))
+            CrossNFC.Current.OnTagDiscovered += Current_OnTagDiscovered;
+
+            CrossNFC.Current.StartListening();
+
+            StatusLabel.Text = "Esperando tarjeta NFC...";
+        }
+        catch (Exception ex)
         {
             await DisplayAlert(
-                "Error",
-                "Escribe un nombre",
+                "Error NFC",
+                ex.Message,
                 "OK"
             );
-
-            return;
         }
+    }
 
+    private async void Current_OnTagDiscovered(
+        ITagInfo tagInfo,
+        bool format)
+    {
+        try
+        {
+            string uid = BitConverter.ToString(tagInfo.Identifier);
+
+            await MainThread.InvokeOnMainThreadAsync(async () =>
+            {
+                BusquedaEntry.Text = uid;
+
+                await BuscarAlumno(uid);
+            });
+        }
+        catch (Exception ex)
+        {
+            await MainThread.InvokeOnMainThreadAsync(async () =>
+            {
+                await DisplayAlert(
+                    "Error NFC",
+                    ex.Message,
+                    "OK"
+                );
+            });
+        }
+    }
+
+    private async void OnBusquedaCompleted(
+        object sender,
+        EventArgs e)
+    {
+        string texto = BusquedaEntry.Text?.Trim() ?? "";
+
+        if (string.IsNullOrWhiteSpace(texto))
+            return;
+
+        await BuscarAlumno(texto);
+    }
+
+    private async Task BuscarAlumno(string texto)
+    {
         try
         {
             StatusLabel.Text = "Buscando alumno...";
 
-            using HttpClient client = new();
+            HttpClientHandler handler = new HttpClientHandler();
+
+            handler.UseCookies = true;
+
+            handler.CookieContainer = App.Cookies;
+
+            using HttpClient client = new(handler);
 
             var body = new
             {
@@ -49,20 +108,34 @@ public partial class ScannerPage : ContentPage
                 @params = new
                 {
                     model = "nfc.alumno",
-                    domain = new object[]
+                    method = "search_read",
+                    args = new object[]
                     {
                         new object[]
                         {
-                            "nombre_completo",
-                            "ilike",
-                            busqueda
+                            "|",
+                            new object[]
+                            {
+                                "nombre_completo",
+                                "ilike",
+                                texto
+                            },
+                            new object[]
+                            {
+                                "uid_tarjeta_rfid",
+                                "=",
+                                texto
+                            }
                         }
                     },
-                    fields = new string[]
+                    kwargs = new
                     {
-                        "nombre_completo",
-                        "curso_id",
-                        "permiso_salida"
+                        fields = new string[]
+                        {
+                            "nombre_completo",
+                            "curso_id",
+                            "permiso_salida"
+                        }
                     }
                 }
             };
@@ -76,53 +149,28 @@ public partial class ScannerPage : ContentPage
             );
 
             HttpResponseMessage response = await client.PostAsync(
-                $"{ODOO_URL}/nfc/api/search_maui",
+                $"{ODOO_URL}/web/dataset/call_kw/nfc.alumno/search_read",
                 content
             );
 
             string responseText = await response.Content.ReadAsStringAsync();
 
-            await DisplayAlert(
-                "DEBUG",
-                responseText,
-                "OK"
-            );
-
-            return;
-
             JsonDocument doc = JsonDocument.Parse(responseText);
 
-            JsonElement result = doc.RootElement;
+            JsonElement result = doc
+                .RootElement
+                .GetProperty("result");
 
-            string status = result
-                .GetProperty("status")
-                .GetString() ?? "";
-
-            if (status != "ok")
+            if (result.GetArrayLength() == 0)
             {
-                await DisplayAlert(
-                    "Error",
-                    "Error buscando alumno",
-                    "OK"
-                );
+                AlumnoCard.IsVisible = false;
+
+                StatusLabel.Text = "Alumno no encontrado";
 
                 return;
             }
 
-            JsonElement records = result.GetProperty("records");
-
-            if (records.GetArrayLength() == 0)
-            {
-                await DisplayAlert(
-                    "Sin resultados",
-                    "Alumno no encontrado",
-                    "OK"
-                );
-
-                return;
-            }
-
-            JsonElement alumno = records[0];
+            JsonElement alumno = result[0];
 
             string nombre = alumno
                 .GetProperty("nombre_completo")
@@ -134,15 +182,17 @@ public partial class ScannerPage : ContentPage
 
             string curso = "Sin curso";
 
-            if (alumno.TryGetProperty("curso_id", out JsonElement cursoElement))
+            if (
+                alumno.TryGetProperty(
+                    "curso_id",
+                    out JsonElement cursoElement)
+                &&
+                cursoElement.ValueKind == JsonValueKind.Array
+                &&
+                cursoElement.GetArrayLength() > 1
+            )
             {
-                if (
-                    cursoElement.ValueKind == JsonValueKind.Array &&
-                    cursoElement.GetArrayLength() > 1
-                )
-                {
-                    curso = cursoElement[1].GetString() ?? "Sin curso";
-                }
+                curso = cursoElement[1].GetString() ?? "Sin curso";
             }
 
             MostrarAlumno(
@@ -150,6 +200,8 @@ public partial class ScannerPage : ContentPage
                 curso,
                 autorizado
             );
+
+            StatusLabel.Text = "Alumno encontrado";
         }
         catch (Exception ex)
         {
@@ -164,8 +216,7 @@ public partial class ScannerPage : ContentPage
     private void MostrarAlumno(
         string nombre,
         string curso,
-        bool autorizado
-    )
+        bool autorizado)
     {
         AlumnoCard.IsVisible = true;
 
@@ -173,34 +224,43 @@ public partial class ScannerPage : ContentPage
 
         CursoAlumnoLabel.Text = curso;
 
-        string[] partes = nombre.Split(' ');
+        string[] partes = nombre.Split(
+            ' ',
+            StringSplitOptions.RemoveEmptyEntries);
 
-        string iniciales = partes[0][0].ToString();
+        string iniciales = "?";
 
-        if (partes.Length > 1)
+        if (partes.Length > 0)
         {
-            iniciales += partes[^1][0];
+            iniciales = partes[0][0].ToString();
+
+            if (partes.Length > 1)
+            {
+                iniciales += partes[^1][0];
+            }
         }
 
         InicialesLabel.Text = iniciales.ToUpper();
 
         if (autorizado)
         {
-            EstadoFrame.BackgroundColor = Color.FromArgb("#28a745");
+            EstadoFrame.BackgroundColor =
+                Color.FromArgb("#28a745");
 
             EstadoLabel.Text = "AUTORIZADO";
         }
         else
         {
-            EstadoFrame.BackgroundColor = Color.FromArgb("#dc3545");
+            EstadoFrame.BackgroundColor =
+                Color.FromArgb("#dc3545");
 
             EstadoLabel.Text = "DENEGADO";
         }
-
-        StatusLabel.Text = "Alumno encontrado";
     }
 
-    private async void OnLogoutClicked(object sender, EventArgs e)
+    private async void OnLogoutClicked(
+        object sender,
+        EventArgs e)
     {
         bool salir = await DisplayAlert(
             "Salir",
@@ -211,6 +271,14 @@ public partial class ScannerPage : ContentPage
 
         if (salir)
         {
+            try
+            {
+                CrossNFC.Current.StopListening();
+            }
+            catch
+            {
+            }
+
             await Navigation.PopAsync();
         }
     }
