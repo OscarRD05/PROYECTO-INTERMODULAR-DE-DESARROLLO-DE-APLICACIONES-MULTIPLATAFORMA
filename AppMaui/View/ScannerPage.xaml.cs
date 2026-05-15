@@ -75,7 +75,7 @@ public partial class ScannerPage : ContentPage
         }
     }
 
-    private async void OnBusquedaCompleted(
+    private async void OnBuscarClicked(
         object sender,
         EventArgs e)
     {
@@ -223,24 +223,6 @@ public partial class ScannerPage : ContentPage
         NombreAlumnoLabel.Text = nombre;
 
         CursoAlumnoLabel.Text = curso;
-
-        string[] partes = nombre.Split(
-            ' ',
-            StringSplitOptions.RemoveEmptyEntries);
-
-        string iniciales = "?";
-
-        if (partes.Length > 0)
-        {
-            iniciales = partes[0][0].ToString();
-
-            if (partes.Length > 1)
-            {
-                iniciales += partes[^1][0];
-            }
-        }
-
-        InicialesLabel.Text = iniciales.ToUpper();
 
         if (autorizado)
         {
