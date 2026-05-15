@@ -14,10 +14,6 @@ class NFCController(http.Controller):
     def api_test(self, **kwargs):
         return "OK - NFC Reader module loaded"
 
-    @http.route('/hola', type='http', auth='public', csrf=False)
-    def hola(self, **kwargs):
-        return "FUNCIONA"
-
     @http.route('/nfc/api/login', type='json', auth='none', cors='*', csrf=False)
     def api_login(self, **kwargs):
         db = kwargs.get('db')
@@ -48,52 +44,6 @@ class NFCController(http.Controller):
     def api_search(self, model, domain, fields, **kwargs):
         records = request.env[model].sudo().search_read(domain, fields)
         return {"status": "ok", "records": records}
-
-    @http.route(
-    '/nfc/api/search_maui',
-    type='http',
-    auth='public',
-    cors='*',
-    csrf=False,
-    methods=['POST']
-    )
-    def api_search_maui(self, **kwargs):
-    
-        try:
-            data = json.loads(request.httprequest.data)
-    
-            params = data.get("params", {})
-    
-            model = params.get("model")
-            domain = params.get("domain", [])
-            fields = params.get("fields", [])
-    
-            records = request.env[model].sudo().search_read(
-                domain,
-                fields
-            )
-    
-            response = {
-                "status": "ok",
-                "records": records
-            }
-    
-            return Response(
-                json.dumps(response),
-                content_type='application/json'
-            )
-    
-        except Exception as e:
-    
-            response = {
-                "status": "error",
-                "message": str(e)
-            }
-    
-            return Response(
-                json.dumps(response),
-                content_type='application/json'
-            )
     
     @http.route('/nfc/api/log', type='json', auth='public', cors='*', csrf=False)
     def api_log(self, alumno_id, tipo='entrada', **kwargs):
