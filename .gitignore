@@ -53,3 +53,5 @@ packages/
 
 # Logs
 *.log
+*.user
+AppMaui/App.csproj.user
