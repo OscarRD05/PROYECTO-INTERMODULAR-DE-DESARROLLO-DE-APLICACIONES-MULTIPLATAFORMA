@@ -44,7 +44,7 @@ public class OdooService
         );
 
         string responseText = await response.Content.ReadAsStringAsync();
-        using JsonDocument doc = JsonDocument.Parse(responseText);
+        JsonDocument doc = JsonDocument.Parse(responseText);
 
         JsonElement root = doc.RootElement;
 
