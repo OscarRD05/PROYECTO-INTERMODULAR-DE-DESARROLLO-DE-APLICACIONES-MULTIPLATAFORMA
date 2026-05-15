@@ -24,7 +24,7 @@ public class OdooService
         return new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(15) };
     }
 
-    private async Task<JsonElement> CallApiAsync(string endpoint, object parameters)
+    private async Task<string> CallApiRawAsync(string endpoint, object parameters)
     {
         var body = new
         {
@@ -43,9 +43,12 @@ public class OdooService
             content
         );
 
-        string responseText = await response.Content.ReadAsStringAsync();
-        JsonDocument doc = JsonDocument.Parse(responseText);
+        return await response.Content.ReadAsStringAsync();
+    }
 
+    private static JsonElement ParseResult(string responseText)
+    {
+        using JsonDocument doc = JsonDocument.Parse(responseText);
         JsonElement root = doc.RootElement;
 
         if (root.TryGetProperty("error", out JsonElement error))
@@ -59,44 +62,84 @@ public class OdooService
             throw new Exception(message);
         }
 
-        if (root.TryGetProperty("result", out JsonElement result))
+        if (!root.TryGetProperty("result", out JsonElement result))
         {
-            if (result.TryGetProperty("status", out JsonElement status)
-                && status.GetString() == "error")
-            {
-                string msg = result.TryGetProperty("message", out JsonElement msgEl)
-                    ? msgEl.GetString() ?? "Error desconocido"
-                    : "Error desconocido";
-                throw new Exception(msg);
-            }
-
-            return result;
+            throw new Exception("Respuesta inesperada del servidor");
         }
 
-        throw new Exception("Respuesta inesperada del servidor");
+        if (result.TryGetProperty("status", out JsonElement status)
+            && status.ValueKind == JsonValueKind.String
+            && status.GetString() == "error")
+        {
+            string msg = result.TryGetProperty("message", out JsonElement msgEl)
+                ? msgEl.GetString() ?? "Error desconocido"
+                : "Error desconocido";
+            throw new Exception(msg);
+        }
+
+        string resultJson = result.GetRawText();
+        using JsonDocument resultDoc = JsonDocument.Parse(resultJson);
+        return resultDoc.RootElement.Clone();
+    }
+
+    private static int ExtractInt(JsonElement element, string property)
+    {
+        JsonElement prop = element.GetProperty(property);
+
+        if (prop.ValueKind == JsonValueKind.Number)
+        {
+            return prop.GetInt32();
+        }
+
+        if (prop.ValueKind == JsonValueKind.Object)
+        {
+            if (prop.TryGetProperty("uid", out JsonElement uidProp)
+                && uidProp.ValueKind == JsonValueKind.Number)
+            {
+                return uidProp.GetInt32();
+            }
+
+            if (prop.TryGetProperty("id", out JsonElement idProp)
+                && idProp.ValueKind == JsonValueKind.Number)
+            {
+                return idProp.GetInt32();
+            }
+        }
+
+        if (prop.ValueKind == JsonValueKind.String)
+        {
+            if (int.TryParse(prop.GetString(), out int val))
+            {
+                return val;
+            }
+        }
+
+        throw new Exception($"No se pudo leer el campo '{property}' como número");
     }
 
     public async Task<(bool ok, int uid, string error)> LoginAsync(string db, string login, string password)
     {
         try
         {
-            JsonElement result = await CallApiAsync("/nfc/api/login", new
+            string responseText = await CallApiRawAsync("/nfc/api/login", new
             {
                 db,
                 login,
                 password,
             });
 
+            JsonElement result = ParseResult(responseText);
+
             string status = result.GetProperty("status").GetString() ?? "";
             if (status == "ok")
             {
-                int uid = result.GetProperty("uid").GetInt32();
+                int uid = ExtractInt(result, "uid");
                 return (true, uid, "");
             }
 
             string message = result.TryGetProperty("message", out JsonElement msg)
-                ? msg.GetString() ?? "Autenticación fallida"
-                : "Autenticación fallida";
+                ? msg.GetString() ?? "Autenticacion fallida"
+                : "Autenticacion fallida";
             return (false, 0, message);
         }
         catch (Exception ex)
@@ -107,7 +150,7 @@ public class OdooService
 
     public async Task<AlumnoResult?> BuscarAlumnoAsync(string texto)
     {
-        JsonElement result = await CallApiAsync("/nfc/api/search", new
+        string responseText = await CallApiRawAsync("/nfc/api/search", new
         {
             model = "nfc.alumno",
             domain = new object[]
@@ -119,6 +162,8 @@ public class OdooService
             fields = new string[] { "nombre_completo", "curso_id", "permiso_salida", "uid_tarjeta_rfid" },
         });
 
+        JsonElement result = ParseResult(responseText);
+
         if (!result.TryGetProperty("records", out JsonElement records)
             || records.GetArrayLength() == 0)
         {
@@ -129,17 +174,17 @@ public class OdooService
 
         var alumnoResult = new AlumnoResult
         {
-            Id = alumno.TryGetProperty("id", out JsonElement idEl) ? idEl.GetInt32() : 0,
+            Id = alumno.TryGetProperty("id", out JsonElement idEl) ? ExtractInt(alumno, "id") : 0,
             Nombre = alumno.TryGetProperty("nombre_completo", out JsonElement nameEl)
                 ? nameEl.GetString() ?? "" : "",
             PermisoSalida = alumno.TryGetProperty("permiso_salida", out JsonElement permisoEl)
-                && permisoEl.ValueKind == System.Text.Json.JsonValueKind.True,
+                && permisoEl.ValueKind == JsonValueKind.True,
             UidTarjeta = alumno.TryGetProperty("uid_tarjeta_rfid", out JsonElement uidEl)
                 ? uidEl.GetString() ?? "" : "",
         };
 
         if (alumno.TryGetProperty("curso_id", out JsonElement cursoEl)
-            && cursoEl.ValueKind == System.Text.Json.JsonValueKind.Array
+            && cursoEl.ValueKind == JsonValueKind.Array
             && cursoEl.GetArrayLength() > 1)
         {
             alumnoResult.Curso = cursoEl[1].GetString() ?? "Sin curso";
@@ -154,12 +199,13 @@ public class OdooService
 
     public async Task<bool> RegistrarAsistenciaAsync(int alumnoId, string tipo)
     {
-        JsonElement result = await CallApiAsync("/nfc/api/log", new
+        string responseText = await CallApiRawAsync("/nfc/api/log", new
         {
             alumno_id = alumnoId,
             tipo,
         });
 
+        JsonElement result = ParseResult(responseText);
         return result.GetProperty("status").GetString() == "ok";
     }
 
@@ -175,18 +221,19 @@ public class OdooService
             parameters["motivo"] = motivo;
         }
 
-        JsonElement result = await CallApiAsync("/nfc/api/registrar_salida_anticipada", parameters);
-
+        string responseText = await CallApiRawAsync("/nfc/api/registrar_salida_anticipada", parameters);
+        JsonElement result = ParseResult(responseText);
         return result.GetProperty("status").GetString() == "ok";
     }
 
     public async Task<bool> TogglePermisoSalidaAsync(int alumnoId)
     {
-        JsonElement result = await CallApiAsync("/nfc/api/toggle_permiso", new
+        string responseText = await CallApiRawAsync("/nfc/api/toggle_permiso", new
         {
             alumno_id = alumnoId,
         });
 
+        JsonElement result = ParseResult(responseText);
         return result.GetProperty("status").GetString() == "ok";
     }
 
