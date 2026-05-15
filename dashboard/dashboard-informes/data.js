@@ -354,10 +354,7 @@ function renderTablaProfesores(datos) {
     <tr>
       <td>${p.nombre}</td>
       <td>${p.grupo}</td>
-      <td>
-        <span data-nfc-id="profesor-${p.id}">${p.nfc || "-"}</span>
-        <button class="btn btn-sm btn-outline-secondary ms-1" onclick="editarNfc('profesor', ${p.id})">&#9998;</button>
-      </td>
+      <td>${p.nfc ? p.nfc : '<span class="text-danger fw-bold">NINGUNO</span>'}</td>
     </tr>
   `).join("");
 }
@@ -371,10 +368,7 @@ function renderTablaNFC(datos) {
     <tr>
       <td>${u.nombre}</td>
       <td>${u.rol}</td>
-      <td>
-        <span data-nfc-id="${u.rol === 'Estudiante' ? 'alumno' : 'profesor'}-${u.id}">${u.nfc || "-"}</span>
-        <button class="btn btn-sm btn-outline-secondary ms-1" onclick="editarNfc('${u.rol === 'Estudiante' ? 'alumno' : 'profesor'}', ${u.id})">&#9998;</button>
-      </td>
+      <td>${u.nfc ? u.nfc : '<span class="text-danger fw-bold">NINGUNO</span>'}</td>
     </tr>
   `).join("");
 
@@ -697,20 +691,73 @@ function descargarPDF(tipo) {
 // ═══════════════════════════════════════════════════════════════
 
 let fichaAlumnoActual = null;
-let modalNfcTipo = null;
-let modalNfcId = null;
-let nfcPolling = false;
 
-window.verFichaAlumno = (a) => {
+window.verFichaAlumno = async (a) => {
   fichaAlumnoActual = a;
   const ficha = document.getElementById("ficha-alumno");
   document.getElementById("ficha-nombre").innerText = a.nombre;
   document.getElementById("ficha-grupo").innerText = a.grupo;
-  document.getElementById("ficha-nfc").innerText = a.nfc || "No vinculada";
+  const nfcSpan = document.getElementById("ficha-nfc");
+  if (a.nfc) {
+    nfcSpan.innerText = a.nfc;
+    nfcSpan.className = '';
+  } else {
+    nfcSpan.innerText = "NINGUNO";
+    nfcSpan.className = 'text-danger fw-bold';
+  }
   document.getElementById("ficha-recreo").innerText = a.recreo ? "SÍ" : "NO";
+  const registrosBody = document.getElementById("ficha-registros-body");
+  registrosBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Cargando...</td></tr>';
   ficha.classList.remove("d-none");
   ficha.scrollIntoView({ behavior: "smooth" });
+  await cargarRegistrosAlumno(a.id);
 };
+
+async function cargarRegistrosAlumno(alumnoId) {
+  const registrosBody = document.getElementById("ficha-registros-body");
+  try {
+    const data = await odoo.callApi('/nfc/api/registros_alumno', { alumno_id: alumnoId });
+    const registros = data.registros;
+    if (!registros.length) {
+      registrosBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Sin registros</td></tr>';
+      return;
+    }
+    const tipoLabel = { 'entrada': 'Entrada', 'salida': 'Salida', 'salida_anticipada': 'Salida Anticipada' };
+    registrosBody.innerHTML = registros.map(r => `
+      <tr>
+        <td>${r.fecha_hora}</td>
+        <td>${tipoLabel[r.tipo] || r.tipo}</td>
+        <td>
+          <div class="form-check form-switch d-inline-block">
+            <input class="form-check-input" type="checkbox" ${r.justificado ? 'checked' : ''}
+              onchange="toggleJustificado(${r.id}, this.checked)">
+          </div>
+          ${r.justificado ? '<span class="badge bg-success">Justificado</span>' : '<span class="badge bg-danger">No justificado</span>'}
+        </td>
+        <td>${r.motivo || '-'}</td>
+      </tr>
+    `).join("");
+  } catch (error) {
+    registrosBody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error cargando registros</td></tr>';
+  }
+}
+
+async function toggleJustificado(registroId, justificado) {
+  try {
+    await odoo.callApi('/nfc/api/justificar_falta', {
+      registro_id: registroId,
+      justificado: justificado
+    });
+    if (fichaAlumnoActual) {
+      await cargarRegistrosAlumno(fichaAlumnoActual.id);
+    }
+  } catch (error) {
+    alert("Error justificando falta: " + error.message);
+    if (fichaAlumnoActual) {
+      await cargarRegistrosAlumno(fichaAlumnoActual.id);
+    }
+  }
+}
 
 async function togglePermiso(id) {
   try {
@@ -720,91 +767,6 @@ async function togglePermiso(id) {
     alert("Error actualizando permiso: " + error.message);
   }
 }
-
-function editarNfc(tipo, id) {
-  detenerLecturaNfc();
-  modalNfcTipo = tipo;
-  modalNfcId = id;
-  const span = document.querySelector(`[data-nfc-id="${tipo}-${id}"]`);
-  const uidActual = span ? span.innerText : '-';
-  document.getElementById('modal-nfc-nombre').innerText = `UID actual: ${uidActual}`;
-  document.getElementById('modal-nfc-input').value = uidActual !== '-' ? uidActual : '';
-  document.getElementById('modal-nfc-estado').innerText = '';
-  new bootstrap.Modal(document.getElementById('modal-editar-nfc')).show();
-}
-
-window.editarNfcAlumno = () => {
-  if (!fichaAlumnoActual) return;
-  detenerLecturaNfc();
-  modalNfcTipo = 'alumno';
-  modalNfcId = fichaAlumnoActual.id;
-  document.getElementById('modal-nfc-nombre').innerText = fichaAlumnoActual.nombre;
-  document.getElementById('modal-nfc-input').value = fichaAlumnoActual.nfc || '';
-  document.getElementById('modal-nfc-estado').innerText = '';
-  new bootstrap.Modal(document.getElementById('modal-editar-nfc')).show();
-};
-
-async function iniciarLecturaNfc() {
-  if (nfcPolling) return;
-  nfcPolling = true;
-  const estado = document.getElementById('modal-nfc-estado');
-  const btn = document.getElementById('modal-nfc-escanear');
-  const input = document.getElementById('modal-nfc-input');
-
-  btn.disabled = true;
-  btn.innerText = '⏳ Escaneando...';
-  estado.innerText = 'Acerca la tarjeta al lector NFC';
-
-  try {
-    const res = await fetch('/nfc/api/leer-uid');
-    const data = await res.json();
-    if (data.status === 'ok' && data.uid) {
-      input.value = data.uid;
-      estado.innerText = '¡Tarjeta leída!';
-      estado.className = 'text-success small';
-    } else {
-      estado.innerText = 'Tiempo agotado. Intenta de nuevo.';
-      estado.className = 'text-warning small';
-    }
-  } catch {
-    estado.innerText = 'Error al leer. Intenta de nuevo.';
-    estado.className = 'text-danger small';
-  } finally {
-    nfcPolling = false;
-    btn.disabled = false;
-    btn.innerText = '📡 Leer NFC';
-  }
-}
-
-function detenerLecturaNfc() {
-  nfcPolling = false;
-  const btn = document.getElementById('modal-nfc-escanear');
-  if (btn) {
-    btn.disabled = false;
-    btn.innerText = '📡 Leer NFC';
-  }
-}
-
-document.getElementById('modal-nfc-escanear').onclick = iniciarLecturaNfc;
-
-document.getElementById('modal-nfc-guardar').onclick = async () => {
-  const nuevoUid = document.getElementById('modal-nfc-input').value.trim();
-  if (!nuevoUid) {
-    if (!confirm('¿Dejar sin tarjeta NFC?')) return;
-  }
-
-  try {
-    await odoo.callApi('/nfc/api/vincular_nfc', {
-      tipo: modalNfcTipo,
-      registro_id: parseInt(modalNfcId),
-      uid_nfc: nuevoUid
-    });
-    bootstrap.Modal.getInstance(document.getElementById('modal-editar-nfc')).hide();
-    cargarTabla(vistaActual);
-  } catch (error) {
-    alert('Error actualizando UID: ' + error.message);
-  }
-};
 
 document.getElementById("btn-vincular").onclick = async () => {
   const selectVal = document.getElementById("select-usuario").value;
@@ -827,3 +789,10 @@ document.getElementById("btn-vincular").onclick = async () => {
     alert("Error vinculando tarjeta: " + error.message);
   }
 };
+
+document.getElementById("input-nfc").addEventListener("keydown", function(e) {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    document.getElementById("btn-vincular").click();
+  }
+});

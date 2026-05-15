@@ -14,6 +14,7 @@ class RegistroAsistencia(models.Model):
     )
 
     justificado = fields.Boolean(string="Justificado", default=False)
+    motivo = fields.Char(string="Motivo")
 
     alumno_id = fields.Many2one(
         "nfc.alumno",
@@ -22,10 +23,17 @@ class RegistroAsistencia(models.Model):
         ondelete="cascade",
     )
 
+    profesor_id = fields.Many2one(
+        "nfc.profesor",
+        string="Profesor que registra",
+        ondelete="set null",
+    )
+
     tipo = fields.Selection(
         [
             ("entrada", "Entrada"),
             ("salida", "Salida"),
+            ("salida_anticipada", "Salida Anticipada"),
         ],
         string="Tipo",
         required=True,

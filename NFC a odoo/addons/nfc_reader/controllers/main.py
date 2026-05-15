@@ -155,3 +155,37 @@ class NFCController(http.Controller):
         if not alumno.exists(): return {"status": "error", "message": "No encontrado"}
         alumno.write({'permiso_salida': not alumno.permiso_salida})
         return {"status": "ok", "permiso_salida": alumno.permiso_salida}
+
+    @http.route('/nfc/api/registros_alumno', type='json', auth='public', cors='*', csrf=False)
+    def api_registros_alumno(self, alumno_id, **kwargs):
+        Registro = request.env['nfc.registro_asistencia'].sudo()
+        registros = Registro.search([('alumno_id', '=', alumno_id)], limit=50)
+        resultado = [{
+            'id': r.id,
+            'fecha_hora': r.fecha_hora.strftime('%Y-%m-%d %H:%M'),
+            'tipo': r.tipo,
+            'justificado': r.justificado,
+            'motivo': r.motivo or '',
+        } for r in registros]
+        return {"status": "ok", "registros": resultado}
+
+    @http.route('/nfc/api/justificar_falta', type='json', auth='public', cors='*', csrf=False)
+    def api_justificar_falta(self, registro_id, justificado=True, **kwargs):
+        record = request.env['nfc.registro_asistencia'].sudo().browse(registro_id)
+        if not record.exists():
+            return {"status": "error", "message": "Registro no encontrado"}
+        record.write({'justificado': justificado})
+        return {"status": "ok", "justificado": record.justificado}
+
+    @http.route('/nfc/api/registrar_salida_anticipada', type='json', auth='public', cors='*', csrf=False)
+    def api_registrar_salida_anticipada(self, alumno_id, motivo='', profesor_id=None, **kwargs):
+        vals = {
+            'alumno_id': alumno_id,
+            'tipo': 'salida_anticipada',
+        }
+        if motivo:
+            vals['motivo'] = motivo
+        if profesor_id:
+            vals['profesor_id'] = profesor_id
+        record = request.env['nfc.registro_asistencia'].sudo().create(vals)
+        return {"status": "ok", "id": record.id}

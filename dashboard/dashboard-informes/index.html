@@ -186,10 +186,27 @@
           <div id="ficha-alumno" class="card d-none mb-3">
             <div class="card-body">
               <h4 id="ficha-nombre"></h4>
-              <p><strong>Grupo:</strong> <span id="ficha-grupo"></span></p>
-              <p><strong>NFC:</strong> <span id="ficha-nfc"></span>
-                <button class="btn btn-sm btn-outline-secondary ms-2" onclick="editarNfcAlumno()">&#9998; Cambiar</button></p>
-              <p><strong>Permiso recreo:</strong> <span id="ficha-recreo"></span></p>
+              <div class="row">
+                <div class="col-md-6">
+                  <p><strong>Grupo:</strong> <span id="ficha-grupo"></span></p>
+                  <p><strong>NFC:</strong> <span id="ficha-nfc"></span></p>
+                  <p><strong>Permiso recreo:</strong> <span id="ficha-recreo"></span></p>
+                </div>
+              </div>
+              <div id="ficha-registros">
+                <h5>Registros de asistencia</h5>
+                <table class="table table-sm table-striped text-center align-middle">
+                  <thead class="table-dark">
+                    <tr>
+                      <th>Fecha</th>
+                      <th>Tipo</th>
+                      <th>Justificado</th>
+                      <th>Motivo</th>
+                    </tr>
+                  </thead>
+                  <tbody id="ficha-registros-body"></tbody>
+                </table>
+              </div>
             </div>
           </div>
 
@@ -335,16 +352,21 @@
 
           <!-- Formulario vinculación -->
           <div class="card mb-3">
-            <div class="card-body row g-3">
-              <div class="col-md-6">
-                <select id="select-usuario" class="form-select"></select>
+            <div class="card-body">
+              <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                  <label for="select-usuario" class="form-label">Usuario</label>
+                  <select id="select-usuario" class="form-select"></select>
+                </div>
+                <div class="col-md-4">
+                  <label for="input-nfc" class="form-label">UID tarjeta NFC</label>
+                  <input id="input-nfc" class="form-control" placeholder="Escanea la tarjeta o escribe el UID">
+                </div>
+                <div class="col-md-4">
+                  <button id="btn-vincular" class="btn btn-primary w-100">Vincular</button>
+                </div>
               </div>
-              <div class="col-md-4">
-                <input id="input-nfc" class="form-control" placeholder="UID tarjeta">
-              </div>
-              <div class="col-md-2">
-                <button id="btn-vincular" class="btn btn-primary w-100">Vincular</button>
-              </div>
+              <small class="text-muted mt-2 d-block">Acerca la tarjeta al lector NFC; el UID se escribirá automáticamente. Pulsa Enter o Vincular para confirmar.</small>
             </div>
           </div>
 
@@ -414,35 +436,6 @@
         </div>
 
       </main>
-    </div>
-  </div>
-
-  <!-- Modal editar NFC -->
-  <div class="modal fade" id="modal-editar-nfc" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Cambiar UID NFC</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <p id="modal-nfc-nombre" class="fw-bold"></p>
-          <div class="mb-3">
-            <label for="modal-nfc-input" class="form-label">Nuevo UID de tarjeta:</label>
-            <input type="text" id="modal-nfc-input" class="form-control" placeholder="Escribe el UID o escanea">
-          </div>
-          <div class="d-flex gap-2 align-items-center">
-            <button type="button" id="modal-nfc-escanear" class="btn btn-outline-primary">
-              📡 Leer NFC
-            </button>
-            <span id="modal-nfc-estado" class="text-muted small"></span>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="button" id="modal-nfc-guardar" class="btn btn-primary">Guardar</button>
-        </div>
-      </div>
     </div>
   </div>
 
