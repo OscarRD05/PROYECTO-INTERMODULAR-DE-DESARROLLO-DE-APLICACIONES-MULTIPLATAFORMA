@@ -52,7 +52,7 @@ public partial class MainPage : ContentPage
             // Desactiva el botón mientras se realiza el login.
             LoginButton.IsEnabled = false;
 
-            // Realiza el login contra Odoo.
+            // Realiza el login y verifica si esta en Odoo.
             var (ok, uid, error) =
                 await _odoo.LoginAsync(db, usuario, password);
 
